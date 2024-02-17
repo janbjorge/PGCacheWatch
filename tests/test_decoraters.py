@@ -2,7 +2,6 @@ import collections
 import datetime
 
 import pytest
-
 from pgnotefi import decorators, listeners, models, strategies
 
 

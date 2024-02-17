@@ -2,7 +2,6 @@ import asyncio
 import datetime
 
 import pytest
-
 from pgnotefi import listeners, models, strategies
 
 

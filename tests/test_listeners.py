@@ -4,7 +4,6 @@ import typing
 
 import asyncpg
 import pytest
-
 from pgnotefi import env, listeners, models, utils
 
 

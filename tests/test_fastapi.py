@@ -5,7 +5,6 @@ import asyncpg
 import fastapi
 import pytest
 from fastapi.testclient import TestClient
-
 from pgnotefi import decorators, env, listeners, models, strategies, utils
 
 
