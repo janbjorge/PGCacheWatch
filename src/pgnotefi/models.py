@@ -3,11 +3,43 @@ import typing
 
 import pydantic
 
-OPERATIONS = typing.Literal["insert", "update", "delete", "truncate"]
-PGChannel = typing.NewType("PGChannel", str)
+OPERATIONS = typing.Literal[
+    "insert",
+    "update",
+    "delete",
+    "truncate",
+]
+PGChannel = typing.NewType(
+    "PGChannel",
+    str,
+)
 
 
-@typing.final
+class DeadlineSetting(pydantic.BaseModel):
+    """
+    A data class representing settings for a deadline.
+
+    Attributes:
+        max_iter: Maximum number of iterations allowed.
+        max_time: Maximum time allowed as a timedelta object.
+    """
+
+    max_iter: int = pydantic.Field(gt=0, default=1_000)
+    max_time: datetime.timedelta = pydantic.Field(
+        default=datetime.timedelta(milliseconds=1)
+    )
+
+    @pydantic.model_validator(mode="after")
+    def _max_time_gt_zero(self) -> "DeadlineSetting":
+        if self.max_time <= datetime.timedelta(seconds=0):
+            raise ValueError("max_time must be greater than zero")
+        return self
+
+
+class OsEnv(pydantic.BaseModel):
+    dsn: pydantic.PostgresDsn | None = pydantic.Field(default=None, alias="PGDSN")
+
+
 class Event(pydantic.BaseModel, frozen=True):
     """
     A class representing an event in a PostgreSQL channel.

@@ -4,11 +4,6 @@ import typing
 
 from . import listeners, models, utils
 
-DEFAULT_DEADLINE_SETTINGS: typing.Final = utils.DeadlineSetting(
-    max_iter=1_000,
-    max_time=datetime.timedelta(milliseconds=1),
-)
-
 
 class Strategy(typing.Protocol):
     """
@@ -30,7 +25,7 @@ class Gready(Strategy):
     def __init__(
         self,
         listener: listeners.PGEventQueue,
-        deadline: utils.DeadlineSetting = DEFAULT_DEADLINE_SETTINGS,
+        deadline: models.DeadlineSetting = models.DeadlineSetting(),
         predicate: typing.Callable[[models.Event], bool] = bool,
     ) -> None:
         super().__init__()
@@ -61,7 +56,7 @@ class Windowed(Strategy):
         self,
         listener: listeners.PGEventQueue,
         window: list[models.OPERATIONS],
-        deadline: utils.DeadlineSetting = DEFAULT_DEADLINE_SETTINGS,
+        deadline: models.DeadlineSetting = models.DeadlineSetting(),
     ) -> None:
         super().__init__()
         self._listener = listener
@@ -94,7 +89,7 @@ class Timed(Strategy):
         self,
         listener: listeners.PGEventQueue,
         timedelta: datetime.timedelta,
-        deadline: utils.DeadlineSetting = DEFAULT_DEADLINE_SETTINGS,
+        deadline: models.DeadlineSetting = models.DeadlineSetting(),
     ) -> None:
         super().__init__()
         self._listener = listener

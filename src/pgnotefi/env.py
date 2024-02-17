@@ -1,11 +1,6 @@
 import os
 import typing
 
-import pydantic
+from pgnotefi import models
 
-
-class OsEnv(pydantic.BaseModel):
-    dsn: pydantic.PostgresDsn | None = pydantic.Field(default=None, alias="PGDSN")
-
-
-parsed: typing.Final = OsEnv.model_validate(os.environ)
+parsed: typing.Final = models.OsEnv.model_validate(os.environ)

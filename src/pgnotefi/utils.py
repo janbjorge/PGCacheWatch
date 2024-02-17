@@ -4,7 +4,6 @@ import functools
 import typing
 
 import asyncpg
-import pydantic
 
 from pgnotefi import listeners, models
 
@@ -30,28 +29,9 @@ async def emitevent(
     )
 
 
-class DeadlineSetting(pydantic.BaseModel):
-    """
-    A data class representing settings for a deadline.
-
-    Attributes:
-        max_iter: Maximum number of iterations allowed.
-        max_time: Maximum time allowed as a timedelta object.
-    """
-
-    max_iter: int = pydantic.Field(gt=0)
-    max_time: datetime.timedelta
-
-    @pydantic.model_validator(mode="after")
-    def _max_time_gt_zero(self) -> "DeadlineSetting":
-        if self.max_time <= datetime.timedelta(seconds=0):
-            raise ValueError("max_time must be greater than zero")
-        return self
-
-
 def pick_until_deadline(
     queue: listeners.PGEventQueue,
-    settings: DeadlineSetting,
+    settings: models.DeadlineSetting,
 ) -> typing.Iterator[models.Event]:
     """
     Yield events from the queue until the deadline is reached or queue is empty.
