@@ -1,0 +1,84 @@
+[build-system]
+requires = ["pip>=20.0.0", "setuptools", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pgnotefi"
+description = "A Python library for real-time PostgreSQL event-driven cache invalidation, leveraging existing database infrastructure"
+readme = "README.md"
+requires-python = ">=3.10"
+version = "0.0.1"
+license = { text = "Apache 2.0" }
+authors = [{ name = "janbjorge"}]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: AsyncIO",  # Highlighting async capabilities
+    "Topic :: Database",  # Directly indicating its primary focus on database interaction
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+    "Operating System :: OS Independent",
+    "Environment :: Web Environment",
+    "Environment :: Other Environment"
+]
+dependencies = [
+    "asyncpg>=27.0.0",
+    "pydantic>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/janbjorge/pgnotefi/"
+Repository = "https://github.com/janbjorge/pgnotefi/"
+Issues = "https://github.com/janbjorge/pgnotefi/issues"
+Documentation = "https://github.com/janbjorge/pgnotefi/"
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "fastapi",
+    "httpx",
+    "mypy",
+    "mypy-extensions",
+    "pytest",
+    "pytest-asyncio",
+]
+
+[tool.ruff]
+line-length = 88
+exclude = ["version.py"]
+[tool.ruff.lint]
+select = [
+    "C",
+    "E",
+    "F",
+    "I",
+    "PIE",
+    "Q",
+    "RET",
+    "RSE",
+    "SIM",
+    "W",
+    "C90",
+]
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.mypy]
+disallow_untyped_defs = true
+extra_checks = true
+ignore_missing_imports = true
+plugins = [
+  "pydantic.mypy"
+]
+python_version = 3.10
+strict_equality = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true

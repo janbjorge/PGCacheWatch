@@ -10,7 +10,6 @@ from pgnotefi import decorators, env, listeners, models, strategies, utils
 
 
 async def fastapitestapp(channel: models.PGChannel) -> fastapi.FastAPI:
-
     app = fastapi.FastAPI()
 
     listener = await listeners.PGEventQueue.create(channel)

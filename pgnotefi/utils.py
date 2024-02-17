@@ -5,6 +5,7 @@ import functools
 import typing
 
 import asyncpg
+import pydantic
 
 from pgnotefi import listeners, models
 
@@ -30,8 +31,7 @@ async def emitevent(
     )
 
 
-@dataclasses.dataclass(frozen=True)
-class DeadlineSetting:
+class DeadlineSetting(pydantic.BaseModel):
     """
     A data class representing settings for a deadline.
 
@@ -40,14 +40,14 @@ class DeadlineSetting:
         max_time: Maximum time allowed as a timedelta object.
     """
 
-    max_iter: int
+    max_iter: int = pydantic.Field(gt=0)
     max_time: datetime.timedelta
 
-    def __post__init__(self):
-        if self.max_iter < 0:
-            raise ValueError("max_iter must be greather than zero.")
-        if self.max_time < datetime.timedelta(seconds=0):
-            raise ValueError("max_time must be greather than zero.")
+    @pydantic.model_validator(mode="after")
+    def _max_time_gt_zero(self) -> "DeadlineSetting":
+        if self.max_time <= datetime.timedelta(seconds=0):
+            raise ValueError("max_time must be greater than zero")
+        return self
 
 
 def pick_until_deadline(

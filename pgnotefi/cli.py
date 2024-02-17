@@ -12,14 +12,17 @@ def cliparser() -> argparse.Namespace:
         "--channel-name",
         default="ch_pgnotefi_table_change",
         help=(
-            "The PGNotify channel that will be used by pgnotefi to listen for changes on "
-            "tables, this should be uniq to the pgnotefi clients."
+            "The PGNotify channel that will be used by pgnotefi to listen "
+            "for changes on tables, this should be uniq to the pgnotefi clients."
         ),
     )
     trigger_fn_settings.add_argument(
         "--function-name",
         default="fn_pgnotefi_table_change",
-        help="The name of postgres 'helper function' that emits the on change evnets. This must be uniq.",
+        help=(
+            "The name of postgres 'helper function' that emits the on change evnets. "
+            "This must be uniq."
+        ),
     )
     trigger_fn_settings.add_argument(
         "--trigger-name-prefix",

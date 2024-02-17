@@ -10,17 +10,16 @@ DEFAULT_DEADLINE_SETTINGS: typing.Final = utils.DeadlineSetting(
 )
 
 
-
 class Strategy(typing.Protocol):
     """
     A protocol defining the clear method for different strategies.
     """
 
     def clear(self) -> bool:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def pg_connection_healthy(self) -> bool:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class Gready(Strategy):
@@ -54,7 +53,8 @@ class Gready(Strategy):
 
 class Windowed(Strategy):
     """
-    A strategy that clears events when a specified sequence of operations occurs within a window.
+    A strategy that clears events when a specified sequence
+    of operations occurs within a window.
     """
 
     def __init__(

@@ -1,16 +1,9 @@
-
-import asyncio
-import datetime
 import collections
-import typing
+import datetime
 
-
-import asyncpg
 import pytest
 
-from pgnotefi import env, listeners, models, utils, decorators, strategies
-
-    
+from pgnotefi import decorators, listeners, models, strategies
 
 
 @pytest.mark.asyncio
@@ -20,11 +13,11 @@ async def test_cache_decorator(N: int):
 
     @decorators.cache(
         strategy=strategies.Gready(
-            listener=await listeners.PGEventQueue.create(models.PGChannel(
-                "test_cache_decorator"
-            ))
+            listener=await listeners.PGEventQueue.create(
+                models.PGChannel("test_cache_decorator")
+            )
         ),
-        statistics_callback=lambda x:statistics.update([x]),
+        statistics_callback=lambda x: statistics.update([x]),
     )
     async def now():
         return datetime.datetime.now()

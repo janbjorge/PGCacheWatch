@@ -1,13 +1,45 @@
-## PG-Notefier
-This is a pet project that I've been working on for a few hours, the basic idea is to use Postgres pub/sub-system to invalidate cached in Python. By either adding a trigger to a table or emitting events. The main idea is that most stacks(in my case) will have Postgres running, and instead of installing and dealing with Reddis or other memory options, this feels like a very cheap option. The system runs a small WebSocket server that acts as a bouncer to protect Postgres from connection bloat.
+# pgnotefi
+pgnotefi is a Python library crafted to empower applications with real-time PostgreSQL event notifications for efficient cache invalidation, directly leveraging existing PostgreSQL infrastructure. This approach eliminates the need for additional technologies for cache management, simplifying your stack while enhancing performance and real-time data consistency.
 
-**This is just pet project!**
+## Key Advantages
+- **Leverage Existing Infrastructure**: Utilizes PostgreSQL's native NOTIFY/LISTEN capabilities for event-driven cache invalidation, avoiding the overhead of integrating external caching systems.
+- **Asynchronous and Efficient**: Built on top of `asyncpg` for asynchronous database communication, ensuring non-blocking I/O operations and optimal performance.
+- **Flexible Cache Invalidation Strategies**: Offers a variety of strategies (e.g., Greedy, Windowed, Timed) for nuanced cache invalidation control, tailored to different application needs.
+- **Simple Yet Powerful API**: Designed with simplicity in mind, offering a straightforward setup process and an intuitive API for managing cache invalidation logic.
 
-## Setup
-
-If you got an Postgres instance running, you can just run set the _asyncpg_ environment variables in order to let the service connect to your database. You have to provide an _channel_ as well.
-
-Exmaple:
+## Installation
+To install pgnotefi, run the following command in your terminal:
 ```bash
-python3 -m server --channel table_changes
+pip install pgnotefi
+```
+
+## Using pgnotefi
+### Setting Up
+Initialize PostgreSQL triggers to emit NOTIFY events on data changes. pgnotefi provides utility scripts for easy trigger setup
+```bash
+pgnotefi setup --dsn your_database_dsn --tables your_table_names
+```
+
+### FastAPI Integration
+Example showing how to use pgnotefi for cache invalidation in a FastAPI app
+
+```python
+from fastapi import FastAPI
+from pgnotefi import decorators, listeners, models, strategies
+
+app = FastAPI()
+
+async def setup_app(channel: models.PGChannel) -> FastAPI:
+    listener = await listeners.PGEventQueue.create(channel)
+    
+    @decorators.cache(strategy=strategies.Greedy(listener=listener))
+    async def cached_query():
+        # Simulate a database query
+        return {"data": "query result"}
+
+    @app.get("/data")
+    async def get_data():
+        return await cached_query()
+
+    return app
 ```

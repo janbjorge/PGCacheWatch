@@ -2,7 +2,8 @@ def notify_function(
     channel_name: str,
     function_name: str,
 ) -> str:
-    return f"""CREATE OR REPLACE FUNCTION {function_name}_{channel_name}() RETURNS TRIGGER AS $$
+    return f"""
+CREATE OR REPLACE FUNCTION {function_name}_{channel_name}() RETURNS TRIGGER AS $$
   BEGIN
     PERFORM pg_notify(
       '{channel_name}',
@@ -13,7 +14,8 @@ def notify_function(
       )::text);
     RETURN NEW;
   END;
-  $$ LANGUAGE plpgsql;"""
+  $$ LANGUAGE plpgsql;
+"""
 
 
 def after_change_trigger(
@@ -22,6 +24,8 @@ def after_change_trigger(
     function_name: str,
     trigger_name_prefix: str,
 ) -> str:
-    return f"""CREATE OR REPLACE TRIGGER {trigger_name_prefix}{table_name}
+    return f"""
+CREATE OR REPLACE TRIGGER {trigger_name_prefix}{table_name}
   AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON {table_name}
-  FOR EACH ROW EXECUTE PROCEDURE {function_name}_{channel_name}();"""
+  FOR EACH ROW EXECUTE PROCEDURE {function_name}_{channel_name}();
+"""

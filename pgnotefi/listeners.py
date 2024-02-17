@@ -4,8 +4,9 @@ import json
 import logging
 
 import asyncpg
+import pydantic
 
-from . import env, models
+from . import env, listeners, models
 
 
 def _critical_termination_listener():
@@ -17,20 +18,22 @@ def _critical_termination_listener():
 
 class PGEventQueue(asyncio.Queue[models.Event]):
     """
-    A PostgreSQL event queue that listens to a specified channel and stores incoming events.
+    A PostgreSQL event queue that listens to a specified
+    channel and stores incoming events.
     """
 
     def __init__(
         self,
         pgchannel: models.PGChannel,
         pgconn: asyncpg.Connection | None = None,
-        dsn: str | None = env.parsed.dsn,
+        dsn: pydantic.PostgresDsn | None = env.parsed.dsn,
         max_size: int = 0,
         max_latency: datetime.timedelta = datetime.timedelta(milliseconds=500),
         _called_by_create: bool = False,
     ) -> None:
         """
-        Initializes the PGEventQueue instance. Use the create() classmethod to instantiate.
+        Initializes the PGEventQueue instance. Use the create() classmethod to
+        instantiate.
         """
         if not _called_by_create:
             raise RuntimeError(
@@ -47,13 +50,13 @@ class PGEventQueue(asyncio.Queue[models.Event]):
         cls,
         pgchannel: models.PGChannel,
         pgconn: asyncpg.Connection | None = None,
-        dsn: str | None = env.parsed.dsn,
+        dsn: pydantic.PostgresDsn | None = env.parsed.dsn,
         maxsize: int = 0,
         max_latency: datetime.timedelta = datetime.timedelta(milliseconds=500),
-    ) -> "PGEventQueue":
+    ) -> listeners.PGEventQueue:
         """
-        Creates and initializes a new PGEventQueue instance, connecting to the specified PostgreSQL channel.
-        Returns the initialized PGEventQueue instance.
+        Creates and initializes a new PGEventQueue instance, connecting to the specified
+        PostgreSQL channel. Returns the initialized PGEventQueue instance.
         """
         me = cls(
             pgchannel=pgchannel,
@@ -64,11 +67,10 @@ class PGEventQueue(asyncio.Queue[models.Event]):
             _called_by_create=True,
         )
         if me._pgconn is None:
-            me._pgconn = await asyncpg.connect(dsn=me._dsn)
-        await me._pgconn.add_listener(me._pgchannel, me.parse_and_put)
+            me._pgconn = pgconn or await asyncpg.connect(dsn=me._dsn)
 
-        # TODO: Self-recover?
         me._pgconn.add_termination_listener(_critical_termination_listener)
+        await me._pgconn.add_listener(me._pgchannel, me.parse_and_put)
 
         return me
 
@@ -80,11 +82,14 @@ class PGEventQueue(asyncio.Queue[models.Event]):
         payload: str,
     ) -> None:
         """
-        Parses a given payload and puts it into a queue. If the latency requirement is not met, logs a
-        warning but still adds the event to the queue. If parsing or queuing fails, logs the exception.
+        Parses a given payload and puts it into a queue. If the latency requirement is
+        not met, logs a warning but still adds the event to the queue.
+        If parsing or queuing fails, logs the exception.
         """
         try:
-            parsed = models.Event.parse_obj(json.loads(payload) | dict(channel=channel))
+            parsed = models.Event.model_validate(
+                json.loads(payload) | {"channel": channel}
+            )
             if parsed.latency > self._max_latency:
                 logging.warning("Latency for %s above %s.", parsed, self._max_latency)
         except Exception:
