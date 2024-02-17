@@ -14,13 +14,13 @@ async def fastapitestapp(channel: models.PGChannel) -> fastapi.FastAPI:
     listener = await listeners.PGEventQueue.create(channel)
 
     @decorators.cache(strategy=strategies.Gready(listener=listener))
-    async def slowdbread() -> dict:
+    async def slow_db_read() -> dict:
         await asyncio.sleep(0.1)  # sim. a slow db-query.
         return {"now": datetime.datetime.now().isoformat()}
 
     @app.get("/sysconf")
     async def sysconf() -> dict[str, str]:
-        return await slowdbread()
+        return await slow_db_read()
 
     return app
 
@@ -35,7 +35,7 @@ async def test_fastapi(N: int) -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("N", (4, 8))
+@pytest.mark.parametrize("N", (4, 8, 16))
 async def test_fastapi_invalidate_cache(N: int) -> None:
     # Emits one cache invalidation event per call, number of uniq timestamps
     # should equal the number of calls(N).

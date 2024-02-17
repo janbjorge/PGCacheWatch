@@ -7,7 +7,7 @@ from pgnotefi import decorators, listeners, models, strategies
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("N", (4, 16, 64))
-async def test_cache_decorator(N: int) -> None:
+async def test_gready_cache_decorator(N: int) -> None:
     statistics = collections.Counter[str]()
 
     @decorators.cache(
@@ -24,6 +24,5 @@ async def test_cache_decorator(N: int) -> None:
     for _ in range(N):
         await now()
 
-    print(statistics, N)
     assert statistics["hit"] == N - 1
     assert statistics["miss"] == 1

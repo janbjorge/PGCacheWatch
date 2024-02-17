@@ -13,7 +13,7 @@ def cliparser() -> argparse.Namespace:
         default="ch_pgnotefi_table_change",
         help=(
             "The PGNotify channel that will be used by pgnotefi to listen "
-            "for changes on tables, this should be uniq to the pgnotefi clients."
+            "for changes on tables, this should be uniq to pgnotefi clients."
         ),
     )
     trigger_fn_settings.add_argument(
@@ -27,14 +27,14 @@ def cliparser() -> argparse.Namespace:
     trigger_fn_settings.add_argument(
         "--trigger-name-prefix",
         default="tg_pgnotefi_table_change_",
-        help="All triggers install on tables will start with this prefix.",
+        help="All triggers installed on tables will start with this prefix.",
     )
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("--dsn", default=env.parsed.dsn)
-    subparsers = parser.add_subparsers(dest="command")
+    subparsers = parser.add_subparsers(dest="command", required=True)
 
     mock = subparsers.add_parser(
         "mock",
@@ -86,13 +86,12 @@ async def main() -> None:
         )
 
     if parsed.command == "setup":
-        queries = []
-        queries.append(
+        queries = [
             triggers.notify_function(
                 channel_name=parsed.channel_name,
                 function_name=parsed.function_name,
             )
-        )
+        ]
 
         for table in parsed.tables:
             queries.append(

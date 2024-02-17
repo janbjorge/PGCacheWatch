@@ -6,13 +6,15 @@ from pgnotefi import listeners, models, strategies
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("N", (4, 16, 64))
 async def test_gready_strategy(
-    N: int = 10,
+    N: int,
     channel: models.PGChannel = models.PGChannel("test_gready_strategy"),
 ) -> None:
     listener = await listeners.PGEventQueue.create(channel)
     strategy = strategies.Gready(
-        listener=listener, predicate=lambda e: e.operation == "insert"
+        listener=listener,
+        predicate=lambda e: e.operation == "insert",
     )
 
     for _ in range(N):
@@ -42,8 +44,9 @@ async def test_gready_strategy(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("N", (4, 16, 64))
 async def test_windowed_strategy(
-    N: int = 10,
+    N: int,
     channel: models.PGChannel = models.PGChannel("test_windowed_strategy"),
 ) -> None:
     listener = await listeners.PGEventQueue.create(channel)
@@ -97,6 +100,7 @@ async def test_windowed_strategy(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("N", (4, 16, 64))
 @pytest.mark.parametrize(
     "dt",
     (
@@ -106,7 +110,7 @@ async def test_windowed_strategy(
 )
 async def test_timed_strategy(
     dt: datetime.timedelta,
-    N: int = 5,
+    N: int,
     channel: models.PGChannel = models.PGChannel("test_timed_strategy"),
 ) -> None:
     listener = await listeners.PGEventQueue.create(channel)
