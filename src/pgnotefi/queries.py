@@ -1,4 +1,4 @@
-def notify_function(
+def create_notify_function(
     channel_name: str,
     function_name: str,
 ) -> str:
@@ -18,7 +18,7 @@ CREATE OR REPLACE FUNCTION {function_name}_{channel_name}() RETURNS TRIGGER AS $
 """
 
 
-def after_change_trigger(
+def create_after_change_trigger(
     table_name: str,
     channel_name: str,
     function_name: str,
@@ -29,3 +29,23 @@ CREATE OR REPLACE TRIGGER {trigger_name_prefix}{table_name}
   AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON {table_name}
   FOR EACH ROW EXECUTE PROCEDURE {function_name}_{channel_name}();
 """
+
+
+def fetch_trigger_names(prefix: str) -> str:
+    return f"""
+SELECT
+  event_object_table AS table,
+  trigger_name
+FROM
+  information_schema.triggers
+WHERE
+  trigger_name LIKE '{prefix}%'
+"""
+
+
+def drop_trigger(trigger_name: str, table: str) -> str:
+    return f"""DROP IF EXISTS {trigger_name} ON {table};"""
+
+
+def drop_function(name: str) -> str:
+    return f"""DROP FUNCTION IF EXISTS {name}();"""

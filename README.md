@@ -17,7 +17,7 @@ pip install pgnotefi
 ### Setting Up
 Initialize PostgreSQL triggers to emit NOTIFY events on data changes. pgnotefi provides utility scripts for easy trigger setup
 ```bash
-pgnotefi setup --dsn your_database_dsn --tables your_table_names
+pgnotefi install --tables your_table_names
 ```
 
 ### FastAPI Integration

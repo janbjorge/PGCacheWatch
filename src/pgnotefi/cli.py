@@ -3,7 +3,7 @@ import datetime
 
 import asyncpg
 
-from pgnotefi import env, models, triggers, utils
+from pgnotefi import env, models, queries, utils
 
 
 def cliparser() -> argparse.Namespace:
@@ -33,7 +33,7 @@ def cliparser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--dsn", default=env.parsed.dsn)
+    parser.add_argument("--dsn", default=str(env.parsed.dsn))
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     mock = subparsers.add_parser(
@@ -41,8 +41,8 @@ def cliparser() -> argparse.Namespace:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         parents=[trigger_fn_settings],
     )
-    setup = subparsers.add_parser(
-        "setup",
+    install = subparsers.add_parser(
+        "install",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         parents=[trigger_fn_settings],
     )
@@ -52,8 +52,8 @@ def cliparser() -> argparse.Namespace:
         parents=[trigger_fn_settings],
     )
 
-    setup.add_argument("tables", nargs=argparse.ONE_OR_MORE)
-    setup.add_argument(
+    install.add_argument("tables", nargs=argparse.ONE_OR_MORE)
+    install.add_argument(
         "--commit",
         action="store_true",
         help="Commit function and triggers to db.",
@@ -85,17 +85,17 @@ async def main() -> None:
             conn=await asyncpg.connect(dsn=parsed.dsn),
         )
 
-    if parsed.command == "setup":
-        queries = [
-            triggers.notify_function(
+    if parsed.command == "install":
+        install = [
+            queries.notify_function(
                 channel_name=parsed.channel_name,
                 function_name=parsed.function_name,
             )
         ]
 
         for table in parsed.tables:
-            queries.append(
-                triggers.after_change_trigger(
+            install.append(
+                queries.after_change_trigger(
                     table_name=table,
                     channel_name=parsed.channel_name,
                     function_name=parsed.function_name,
@@ -103,10 +103,23 @@ async def main() -> None:
                 )
             )
 
-        combined = "\n".join(queries)
+        combined = "\n".join(install)
         print(combined, flush=True)
         if parsed.commit:
             await (await asyncpg.connect(dsn=parsed.dsn)).execute(combined)
 
     if parsed.command == "uninstall":
-        raise NotImplementedError("The uninstall command is not yet implemented.")
+        trigger_names = await (await asyncpg.connect(dsn=parsed.dsn)).fetch(
+            queries.fetch_trigger_names(parsed.trigger_name_prefix),
+        )
+        combined = "\n\n".join(
+            (
+                "\n".join(
+                    queries.drop_trigger(t["trigger_name"], t["table"])
+                    for t in trigger_names
+                ),
+                queries.drop_function(parsed.function_name),
+            )
+        )
+        print(combined, flush=True)
+        await (await asyncpg.connect(dsn=parsed.dsn)).execute(combined)

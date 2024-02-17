@@ -41,13 +41,14 @@ Documentation = "https://github.com/janbjorge/pgnotefi/"
 
 [project.optional-dependencies]
 dev = [
-    "ruff",
+    "asyncpg-stubs",
     "fastapi",
     "httpx",
-    "mypy",
     "mypy-extensions",
-    "pytest",
+    "mypy",
     "pytest-asyncio",
+    "pytest",
+    "ruff",
 ]
 
 [tool.ruff]
