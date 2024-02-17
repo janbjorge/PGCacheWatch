@@ -10,7 +10,7 @@ from pgnotefi import listeners, models, strategies
 async def test_gready_strategy(
     N: int = 10,
     channel: models.PGChannel = models.PGChannel("test_gready_strategy"),
-):
+) -> None:
     listener = await listeners.PGEventQueue.create(channel)
     strategy = strategies.Gready(
         listener=listener, predicate=lambda e: e.operation == "insert"
@@ -46,7 +46,7 @@ async def test_gready_strategy(
 async def test_windowed_strategy(
     N: int = 10,
     channel: models.PGChannel = models.PGChannel("test_windowed_strategy"),
-):
+) -> None:
     listener = await listeners.PGEventQueue.create(channel)
     strategy = strategies.Windowed(
         listener=listener, window=["insert", "update", "delete"]
@@ -109,7 +109,7 @@ async def test_timed_strategy(
     dt: datetime.timedelta,
     N: int = 5,
     channel: models.PGChannel = models.PGChannel("test_timed_strategy"),
-):
+) -> None:
     listener = await listeners.PGEventQueue.create(channel)
     strategy = strategies.Timed(listener=listener, timedelta=dt)
 

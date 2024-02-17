@@ -8,7 +8,7 @@ PGChannel = typing.NewType("PGChannel", str)
 
 
 @typing.final
-class Event(pydantic.BaseModel):
+class Event(pydantic.BaseModel, frozen=True):
     """
     A class representing an event in a PostgreSQL channel.
 

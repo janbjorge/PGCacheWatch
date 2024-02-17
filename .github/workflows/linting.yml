@@ -1,0 +1,24 @@
+name: linting
+
+on: [push, pull_request]
+
+jobs:
+  linting:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up python
+        uses: actions/setup-python@v4
+      - name: Install dev-env.
+        run: |
+          pip install -U pip
+          pip install ".[dev]"
+      - name: Ruff check
+        if: ${{ always() }}
+        run: ruff check .
+      - name: Ruff format
+        if: ${{ always() }}
+        run: ruff format . --check

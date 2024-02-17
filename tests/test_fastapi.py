@@ -15,7 +15,7 @@ async def fastapitestapp(channel: models.PGChannel) -> fastapi.FastAPI:
     listener = await listeners.PGEventQueue.create(channel)
 
     @decorators.cache(strategy=strategies.Gready(listener=listener))
-    async def slowdbread():
+    async def slowdbread() -> dict:
         await asyncio.sleep(0.1)  # sim. a slow db-query.
         return {"now": datetime.datetime.now().isoformat()}
 
@@ -28,7 +28,7 @@ async def fastapitestapp(channel: models.PGChannel) -> fastapi.FastAPI:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("N", (2, 4, 32))
-async def test_fastapi(N: int):
+async def test_fastapi(N: int) -> None:
     # No cache invalidation evnets emitted, all timestamps should be the same.
     tc = TestClient(await fastapitestapp(models.PGChannel("test_fastapi")))
     responses = set[str](tc.get("/sysconf").json()["now"] for _ in range(N))
@@ -37,12 +37,12 @@ async def test_fastapi(N: int):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("N", (4, 8))
-async def test_fastapi_invalidate_cache(N: int):
+async def test_fastapi_invalidate_cache(N: int) -> None:
     # Emits one cache invalidation event per call, number of uniq timestamps
     # should equal the number of calls(N).
 
     assert (dsn := env.parsed.dsn)
-    conn = await asyncpg.connect(dsn=dsn)
+    conn = await asyncpg.connect(dsn=str(dsn))
     channel = models.PGChannel(f"test_fastapi_invalidate_cache_{N}")
     tc = TestClient(await fastapitestapp(channel))
 

@@ -6,10 +6,10 @@ import logging
 import asyncpg
 import pydantic
 
-from . import env, listeners, models
+from . import env, models
 
 
-def _critical_termination_listener():
+def _critical_termination_listener() -> None:
     # Must be defined in the global namespace, as ayncpg keeps
     # a set of functions to call. This this will now happen once as
     # all instance will point to the same function.
@@ -53,7 +53,7 @@ class PGEventQueue(asyncio.Queue[models.Event]):
         dsn: pydantic.PostgresDsn | None = env.parsed.dsn,
         maxsize: int = 0,
         max_latency: datetime.timedelta = datetime.timedelta(milliseconds=500),
-    ) -> listeners.PGEventQueue:
+    ) -> "PGEventQueue":
         """
         Creates and initializes a new PGEventQueue instance, connecting to the specified
         PostgreSQL channel. Returns the initialized PGEventQueue instance.
@@ -67,7 +67,7 @@ class PGEventQueue(asyncio.Queue[models.Event]):
             _called_by_create=True,
         )
         if me._pgconn is None:
-            me._pgconn = pgconn or await asyncpg.connect(dsn=me._dsn)
+            me._pgconn = pgconn or await asyncpg.connect(dsn=str(me._dsn))
 
         me._pgconn.add_termination_listener(_critical_termination_listener)
         await me._pgconn.add_listener(me._pgchannel, me.parse_and_put)

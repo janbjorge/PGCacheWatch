@@ -11,11 +11,14 @@ from pgnotefi import env, listeners, models, utils
 @pytest.mark.asyncio
 @pytest.mark.parametrize("N", (4, 8, 32))
 @pytest.mark.parametrize("operation", typing.get_args(models.OPERATIONS))
-async def test_eventqueue_and_pglistner(N: int, operation: models.OPERATIONS):
+async def test_eventqueue_and_pglistner(
+    N: int,
+    operation: models.OPERATIONS,
+) -> None:
     assert (dsn := env.parsed.dsn)
     channel = models.PGChannel(f"test_eventqueue_and_pglistner_{N}_{operation}")
     eq = await listeners.PGEventQueue.create(channel)
-    conn = await asyncpg.connect(dsn=dsn)
+    conn = await asyncpg.connect(dsn=str(dsn))
 
     for _ in range(N):
         await utils.emitevent(
