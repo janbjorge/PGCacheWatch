@@ -25,7 +25,7 @@ async def emitevent(
     await conn.execute(
         "SELECT pg_notify($1, $2)",
         event.channel,
-        event.json(exclude={"received_at"}),
+        event.model_dump_json(exclude={"received_at"}),
     )
 
 

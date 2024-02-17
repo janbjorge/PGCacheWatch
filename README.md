@@ -20,7 +20,7 @@ Initialize PostgreSQL triggers to emit NOTIFY events on data changes. pgnotefi p
 pgnotefi install --tables your_table_names
 ```
 
-### FastAPI Integration
+### FastAPI Example
 Example showing how to use pgnotefi for cache invalidation in a FastAPI app
 
 ```python
@@ -31,7 +31,7 @@ app = FastAPI()
 
 async def setup_app(channel: models.PGChannel) -> FastAPI:
     listener = await listeners.PGEventQueue.create(channel)
-    
+
     @decorators.cache(strategy=strategies.Greedy(listener=listener))
     async def cached_query():
         # Simulate a database query

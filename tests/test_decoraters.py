@@ -1,3 +1,4 @@
+import asyncio
 import collections
 import datetime
 
@@ -6,7 +7,7 @@ from pgnotefi import decorators, listeners, models, strategies
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("N", (4, 16, 64))
+@pytest.mark.parametrize("N", (4, 16, 64, 512))
 async def test_gready_cache_decorator(N: int) -> None:
     statistics = collections.Counter[str]()
 
@@ -21,8 +22,6 @@ async def test_gready_cache_decorator(N: int) -> None:
     async def now() -> datetime.datetime:
         return datetime.datetime.now()
 
-    for _ in range(N):
-        await now()
-
+    await asyncio.gather(*[now() for _ in range(N)])
     assert statistics["hit"] == N - 1
     assert statistics["miss"] == 1
