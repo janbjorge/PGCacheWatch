@@ -1,4 +1,4 @@
-name: Build and test pgnotefi.
+name: Build and test pgcachewatch.
 
 on:
   pull_request:
@@ -38,7 +38,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install pgnotefi
+      - name: Install pgcachewatch
         run: |
           pip install pip -U
           pip install .[dev]

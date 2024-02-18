@@ -4,7 +4,7 @@ import typing
 
 import asyncpg
 import pytest
-from pgnotefi import env, listeners, models, utils
+from pgcachewatch import env, listeners, models, utils
 
 
 @pytest.mark.parametrize("N", (4, 8, 32))

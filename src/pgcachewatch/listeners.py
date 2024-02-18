@@ -29,13 +29,13 @@ class PGEventQueue(asyncio.Queue[models.Event]):
         dsn: pydantic.PostgresDsn | None = env.parsed.dsn,
         max_size: int = 0,
         max_latency: datetime.timedelta = datetime.timedelta(milliseconds=500),
-        __called_by_create: bool = False,
+        _called_by_create: bool = False,
     ) -> None:
         """
         Initializes the PGEventQueue instance. Use the create() classmethod to
         instantiate.
         """
-        if not __called_by_create:
+        if not _called_by_create:
             raise RuntimeError(
                 "Use classmethod create(...) to instantiate PGEventQueue."
             )

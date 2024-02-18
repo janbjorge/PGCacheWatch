@@ -5,7 +5,7 @@ import asyncpg
 import fastapi
 import pytest
 from fastapi.testclient import TestClient
-from pgnotefi import decorators, env, listeners, models, strategies, utils
+from pgcachewatch import decorators, env, listeners, models, strategies, utils
 
 
 async def fastapitestapp(channel: models.PGChannel) -> fastapi.FastAPI:

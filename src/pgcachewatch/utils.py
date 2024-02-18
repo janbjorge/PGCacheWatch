@@ -5,7 +5,7 @@ import typing
 
 import asyncpg
 
-from pgnotefi import listeners, models
+from pgcachewatch import listeners, models
 
 
 def make_key(

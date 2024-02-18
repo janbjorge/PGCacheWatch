@@ -5,7 +5,7 @@ import typing
 
 import typing_extensions
 
-from pgnotefi import strategies, utils
+from pgcachewatch import strategies, utils
 
 P = typing_extensions.ParamSpec("P")
 T = typing.TypeVar("T")

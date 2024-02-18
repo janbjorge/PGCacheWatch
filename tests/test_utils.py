@@ -5,12 +5,15 @@ import typing
 
 import asyncpg
 import pytest
-from pgnotefi import env, listeners, models, utils
+from pgcachewatch import env, listeners, models, utils
 
 
 @pytest.mark.parametrize("N", (1, 2, 8))
 @pytest.mark.parametrize("operation", typing.get_args(models.OPERATIONS))
-async def test_emitevent(N: int, operation: str) -> None:
+async def test_emitevent(
+    N: int,
+    operation: models.OPERATIONS,
+) -> None:
     channel = "test_emitevent"
     listener = await listeners.PGEventQueue.create(models.PGChannel(channel))
     conn = await asyncpg.create_pool(dsn=str(env.parsed.dsn))
@@ -33,18 +36,21 @@ async def test_emitevent(N: int, operation: str) -> None:
     events = [listener.get_nowait() for _ in range(N)]
     assert len(events) == N
     assert [e.operation for e in events].count(operation) == N
+
+    assert listener._pgconn
     await listener._pgconn.close()
+    assert conn
     await conn.close()
 
 
 @pytest.mark.parametrize("max_iter", (100, 200, 500))
-async def test_pick_until_deadline_max_iter(max_iter: int):
+async def test_pick_until_deadline_max_iter(max_iter: int) -> None:
     channel = "test_pick_until_deadline_max_iter"
     listener = await listeners.PGEventQueue.create(models.PGChannel(channel))
 
     items = list(range(max_iter * 2))
     for item in items:
-        listener.put_nowait(item)
+        listener.put_nowait(item)  # type: ignore
 
     assert listener.qsize() == len(items)
     assert (
@@ -62,6 +68,7 @@ async def test_pick_until_deadline_max_iter(max_iter: int):
         == max_iter
     )
 
+    assert listener._pgconn
     await listener._pgconn.close()
 
 
@@ -76,7 +83,7 @@ async def test_pick_until_deadline_max_iter(max_iter: int):
 async def test_pick_until_deadline_max_time(
     max_time: datetime.timedelta,
     monkeypatch: pytest.MonkeyPatch,
-):
+) -> None:
     channel = "test_pick_until_deadline_max_time"
     listener = await listeners.PGEventQueue.create(
         models.PGChannel(channel),
@@ -84,7 +91,7 @@ async def test_pick_until_deadline_max_time(
 
     x = -1
 
-    def always_get_noawit():
+    def always_get_noawit() -> int:
         nonlocal x
         x += 1
         return x
@@ -103,4 +110,6 @@ async def test_pick_until_deadline_max_time(
     )
     end = time.perf_counter()
     assert end - start >= max_time.total_seconds()
+
+    assert listener._pgconn
     await listener._pgconn.close()

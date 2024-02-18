@@ -1,5 +1,5 @@
-# pgnotefi
-pgnotefi is a Python library crafted to empower applications with real-time PostgreSQL event notifications for efficient cache invalidation, directly leveraging existing PostgreSQL infrastructure. This approach eliminates the need for additional technologies for cache management, simplifying your stack while enhancing performance and real-time data consistency.
+# pgcachewatch
+pgcachewatch is a Python library crafted to empower applications with real-time PostgreSQL event notifications for efficient cache invalidation, directly leveraging existing PostgreSQL infrastructure. This approach eliminates the need for additional technologies for cache management, simplifying your stack while enhancing performance and real-time data consistency.
 
 ## Key Advantages
 - **Leverage Existing Infrastructure**: Utilizes PostgreSQL's native NOTIFY/LISTEN capabilities for event-driven cache invalidation, avoiding the overhead of integrating external caching systems.
@@ -8,24 +8,24 @@ pgnotefi is a Python library crafted to empower applications with real-time Post
 - **Simple Yet Powerful API**: Designed with simplicity in mind, offering a straightforward setup process and an intuitive API for managing cache invalidation logic.
 
 ## Installation
-To install pgnotefi, run the following command in your terminal:
+To install pgcachewatch, run the following command in your terminal:
 ```bash
-pip install pgnotefi
+pip install pgcachewatch
 ```
 
-## Using pgnotefi
+## Using pgcachewatch
 ### Setting Up
-Initialize PostgreSQL triggers to emit NOTIFY events on data changes. pgnotefi provides utility scripts for easy trigger setup
+Initialize PostgreSQL triggers to emit NOTIFY events on data changes. pgcachewatch provides utility scripts for easy trigger setup
 ```bash
-pgnotefi install --tables your_table_names
+pgcachewatch install --tables your_table_names
 ```
 
 ### FastAPI Example
-Example showing how to use pgnotefi for cache invalidation in a FastAPI app
+Example showing how to use pgcachewatch for cache invalidation in a FastAPI app
 
 ```python
 from fastapi import FastAPI
-from pgnotefi import decorators, listeners, models, strategies
+from pgcachewatch import decorators, listeners, models, strategies
 
 app = FastAPI()
 

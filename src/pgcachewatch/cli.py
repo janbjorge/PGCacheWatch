@@ -3,22 +3,22 @@ import datetime
 
 import asyncpg
 
-from pgnotefi import env, models, queries, utils
+from pgcachewatch import env, models, queries, utils
 
 
 def cliparser() -> argparse.Namespace:
     common_arguments = argparse.ArgumentParser(add_help=False)
     common_arguments.add_argument(
         "--channel-name",
-        default="ch_pgnotefi_table_change",
+        default="ch_pgcachewatch_table_change",
         help=(
-            "The PGNotify channel that will be used by pgnotefi to listen "
-            "for changes on tables, this should be uniq to pgnotefi clients."
+            "The PGNotify channel that will be used by pgcachewatch to listen "
+            "for changes on tables, this should be uniq to pgcachewatch clients."
         ),
     )
     common_arguments.add_argument(
         "--function-name",
-        default="fn_pgnotefi_table_change",
+        default="fn_pgcachewatch_table_change",
         help=(
             "The name of postgres 'helper function' that emits the on change evnets. "
             "This must be uniq."
@@ -26,7 +26,7 @@ def cliparser() -> argparse.Namespace:
     )
     common_arguments.add_argument(
         "--trigger-name-prefix",
-        default="tg_pgnotefi_table_change_",
+        default="tg_pgcachewatch_table_change_",
         help="All triggers installed on tables will start with this prefix.",
     )
     common_arguments.add_argument(

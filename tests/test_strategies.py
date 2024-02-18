@@ -2,7 +2,7 @@ import asyncio
 import datetime
 
 import pytest
-from pgnotefi import listeners, models, strategies
+from pgcachewatch import listeners, models, strategies
 
 
 @pytest.mark.parametrize("N", (4, 16, 64))
@@ -41,6 +41,7 @@ async def test_gready_strategy(
     for _ in range(N):
         assert not strategy.clear()
 
+    assert listener._pgconn
     await listener._pgconn.close()
 
 
@@ -98,6 +99,7 @@ async def test_windowed_strategy(
         )
         assert not strategy.clear()
 
+    assert listener._pgconn
     await listener._pgconn.close()
 
 
@@ -146,4 +148,5 @@ async def test_timed_strategy(
     for _ in range(N):
         assert not strategy.clear()
 
+    assert listener._pgconn
     await listener._pgconn.close()
