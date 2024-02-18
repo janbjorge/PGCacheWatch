@@ -54,9 +54,9 @@ class Event(pydantic.BaseModel, frozen=True):
 
     channel: PGChannel
     operation: OPERATIONS
-    sent_at: datetime.datetime
+    sent_at: pydantic.AwareDatetime
     table: str
-    received_at: datetime.datetime = pydantic.Field(
+    received_at: pydantic.AwareDatetime = pydantic.Field(
         default_factory=lambda: datetime.datetime.now(
             tz=datetime.timezone.utc,
         )

@@ -8,7 +8,11 @@ import asyncpg
 from pgnotefi import listeners, models
 
 
-def make_key(args: tuple, kwds: dict, typed: bool = False) -> typing.Hashable:
+def make_key(
+    args: tuple[typing.Hashable, ...],
+    kwds: dict,
+    typed: bool = False,
+) -> typing.Hashable:
     """
     Create a cache key from the given function arguments and keyword arguments.
     """
