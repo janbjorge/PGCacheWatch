@@ -20,7 +20,7 @@ def make_key(
 
 
 async def emitevent(
-    conn: asyncpg.Connection,
+    conn: asyncpg.Connection | asyncpg.Pool,
     event: models.Event,
 ) -> None:
     """

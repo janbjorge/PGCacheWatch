@@ -4,9 +4,8 @@ import json
 import logging
 
 import asyncpg
-import pydantic
 
-from . import env, models
+from . import models
 
 
 def _critical_termination_listener() -> None:
@@ -25,8 +24,7 @@ class PGEventQueue(asyncio.Queue[models.Event]):
     def __init__(
         self,
         pgchannel: models.PGChannel,
-        pgconn: asyncpg.Connection | None = None,
-        dsn: pydantic.PostgresDsn | None = env.parsed.dsn,
+        pgconn: asyncpg.Connection,
         max_size: int = 0,
         max_latency: datetime.timedelta = datetime.timedelta(milliseconds=500),
         _called_by_create: bool = False,
@@ -40,17 +38,15 @@ class PGEventQueue(asyncio.Queue[models.Event]):
                 "Use classmethod create(...) to instantiate PGEventQueue."
             )
         super().__init__(maxsize=max_size)
-        self._pgchannel = pgchannel
-        self._pgconn = pgconn
-        self._dsn = dsn
+        self._pg_channel = pgchannel
+        self._pg_connection = pgconn
         self._max_latency = max_latency
 
     @classmethod
     async def create(
         cls,
         pgchannel: models.PGChannel,
-        pgconn: asyncpg.Connection | None = None,
-        dsn: pydantic.PostgresDsn | None = env.parsed.dsn,
+        pgconn: asyncpg.Connection,
         maxsize: int = 0,
         max_latency: datetime.timedelta = datetime.timedelta(milliseconds=500),
     ) -> "PGEventQueue":
@@ -61,16 +57,12 @@ class PGEventQueue(asyncio.Queue[models.Event]):
         me = cls(
             pgchannel=pgchannel,
             pgconn=pgconn,
-            dsn=dsn,
             max_size=maxsize,
             max_latency=max_latency,
             _called_by_create=True,
         )
-        if me._pgconn is None:
-            me._pgconn = pgconn or await asyncpg.connect(dsn=str(me._dsn))
-
-        me._pgconn.add_termination_listener(_critical_termination_listener)
-        await me._pgconn.add_listener(me._pgchannel, me.parse_and_put)
+        me._pg_connection.add_termination_listener(_critical_termination_listener)  # type: ignore[arg-type]
+        await me._pg_connection.add_listener(me._pg_channel, me.parse_and_put)  # type: ignore[arg-type]
 
         return me
 
@@ -101,4 +93,4 @@ class PGEventQueue(asyncio.Queue[models.Event]):
                 logging.exception("Unable to queue `%s`.", parsed)
 
     def pg_connection_healthy(self) -> bool:
-        return bool(self._pgconn and not self._pgconn.is_closed())
+        return bool(self._pg_connection and not self._pg_connection.is_closed())

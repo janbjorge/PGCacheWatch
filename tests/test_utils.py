@@ -5,7 +5,7 @@ import typing
 
 import asyncpg
 import pytest
-from pgcachewatch import env, listeners, models, utils
+from pgcachewatch import listeners, models, utils
 
 
 @pytest.mark.parametrize("N", (1, 2, 8))
@@ -13,14 +13,17 @@ from pgcachewatch import env, listeners, models, utils
 async def test_emitevent(
     N: int,
     operation: models.OPERATIONS,
+    pgconn: asyncpg.Connection,
+    pgpool: asyncpg.Pool,
 ) -> None:
     channel = "test_emitevent"
-    listener = await listeners.PGEventQueue.create(models.PGChannel(channel))
-    conn = await asyncpg.create_pool(dsn=str(env.parsed.dsn))
+    listener = await listeners.PGEventQueue.create(
+        models.PGChannel(channel), pgconn=pgconn
+    )
     await asyncio.gather(
         *[
             utils.emitevent(
-                conn,
+                pgpool,
                 models.Event(
                     channel=channel,
                     operation=operation,
@@ -37,16 +40,17 @@ async def test_emitevent(
     assert len(events) == N
     assert [e.operation for e in events].count(operation) == N
 
-    assert listener._pgconn
-    await listener._pgconn.close()
-    assert conn
-    await conn.close()
-
 
 @pytest.mark.parametrize("max_iter", (100, 200, 500))
-async def test_pick_until_deadline_max_iter(max_iter: int) -> None:
+async def test_pick_until_deadline_max_iter(
+    max_iter: int,
+    pgconn: asyncpg.Connection,
+) -> None:
     channel = "test_pick_until_deadline_max_iter"
-    listener = await listeners.PGEventQueue.create(models.PGChannel(channel))
+    listener = await listeners.PGEventQueue.create(
+        models.PGChannel(channel),
+        pgconn=pgconn,
+    )
 
     items = list(range(max_iter * 2))
     for item in items:
@@ -68,9 +72,6 @@ async def test_pick_until_deadline_max_iter(max_iter: int) -> None:
         == max_iter
     )
 
-    assert listener._pgconn
-    await listener._pgconn.close()
-
 
 @pytest.mark.parametrize(
     "max_time",
@@ -83,10 +84,12 @@ async def test_pick_until_deadline_max_iter(max_iter: int) -> None:
 async def test_pick_until_deadline_max_time(
     max_time: datetime.timedelta,
     monkeypatch: pytest.MonkeyPatch,
+    pgconn: asyncpg.Connection,
 ) -> None:
     channel = "test_pick_until_deadline_max_time"
     listener = await listeners.PGEventQueue.create(
         models.PGChannel(channel),
+        pgconn=pgconn,
     )
 
     x = -1
@@ -110,6 +113,3 @@ async def test_pick_until_deadline_max_time(
     )
     end = time.perf_counter()
     assert end - start >= max_time.total_seconds()
-
-    assert listener._pgconn
-    await listener._pgconn.close()

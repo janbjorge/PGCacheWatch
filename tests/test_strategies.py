@@ -1,16 +1,15 @@
 import asyncio
 import datetime
 
+import asyncpg
 import pytest
 from pgcachewatch import listeners, models, strategies
 
 
 @pytest.mark.parametrize("N", (4, 16, 64))
-async def test_gready_strategy(
-    N: int,
-    channel: models.PGChannel = models.PGChannel("test_gready_strategy"),
-) -> None:
-    listener = await listeners.PGEventQueue.create(channel)
+async def test_gready_strategy(N: int, pgconn: asyncpg.Connection) -> None:
+    channel = models.PGChannel("test_gready_strategy")
+    listener = await listeners.PGEventQueue.create(channel, pgconn)
     strategy = strategies.Gready(
         listener=listener,
         predicate=lambda e: e.operation == "insert",
@@ -41,16 +40,14 @@ async def test_gready_strategy(
     for _ in range(N):
         assert not strategy.clear()
 
-    assert listener._pgconn
-    await listener._pgconn.close()
-
 
 @pytest.mark.parametrize("N", (4, 16, 64))
 async def test_windowed_strategy(
     N: int,
-    channel: models.PGChannel = models.PGChannel("test_windowed_strategy"),
+    pgconn: asyncpg.Connection,
 ) -> None:
-    listener = await listeners.PGEventQueue.create(channel)
+    channel = models.PGChannel("test_windowed_strategy")
+    listener = await listeners.PGEventQueue.create(channel, pgconn)
     strategy = strategies.Windowed(
         listener=listener, window=["insert", "update", "delete"]
     )
@@ -99,9 +96,6 @@ async def test_windowed_strategy(
         )
         assert not strategy.clear()
 
-    assert listener._pgconn
-    await listener._pgconn.close()
-
 
 @pytest.mark.parametrize("N", (4, 16, 64))
 @pytest.mark.parametrize(
@@ -114,9 +108,10 @@ async def test_windowed_strategy(
 async def test_timed_strategy(
     dt: datetime.timedelta,
     N: int,
-    channel: models.PGChannel = models.PGChannel("test_timed_strategy"),
+    pgconn: asyncpg.Connection,
 ) -> None:
-    listener = await listeners.PGEventQueue.create(channel)
+    channel = models.PGChannel("test_timed_strategy")
+    listener = await listeners.PGEventQueue.create(channel, pgconn)
     strategy = strategies.Timed(listener=listener, timedelta=dt)
 
     # Bursed spaced out accoring to min dt req. to trigger a refresh.
@@ -147,6 +142,3 @@ async def test_timed_strategy(
     # No evnets, no clear.
     for _ in range(N):
         assert not strategy.clear()
-
-    assert listener._pgconn
-    await listener._pgconn.close()

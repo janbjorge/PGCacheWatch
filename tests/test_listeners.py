@@ -4,7 +4,7 @@ import typing
 
 import asyncpg
 import pytest
-from pgcachewatch import env, listeners, models, utils
+from pgcachewatch import listeners, models, utils
 
 
 @pytest.mark.parametrize("N", (4, 8, 32))
@@ -12,15 +12,15 @@ from pgcachewatch import env, listeners, models, utils
 async def test_eventqueue_and_pglistner(
     N: int,
     operation: models.OPERATIONS,
+    pgconn: asyncpg.Connection,
+    pgpool: asyncpg.Pool,
 ) -> None:
-    assert (dsn := env.parsed.dsn)
     channel = models.PGChannel(f"test_eventqueue_and_pglistner_{N}_{operation}")
-    eq = await listeners.PGEventQueue.create(channel)
-    conn = await asyncpg.connect(dsn=str(dsn))
+    eq = await listeners.PGEventQueue.create(channel, pgconn)
 
     for _ in range(N):
         await utils.emitevent(
-            conn=conn,
+            conn=pgpool,
             event=models.Event(
                 channel=channel,
                 operation=operation,
