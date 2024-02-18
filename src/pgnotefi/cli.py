@@ -7,8 +7,8 @@ from pgnotefi import env, models, queries, utils
 
 
 def cliparser() -> argparse.Namespace:
-    trigger_fn_settings = argparse.ArgumentParser(add_help=False)
-    trigger_fn_settings.add_argument(
+    common_arguments = argparse.ArgumentParser(add_help=False)
+    common_arguments.add_argument(
         "--channel-name",
         default="ch_pgnotefi_table_change",
         help=(
@@ -16,7 +16,7 @@ def cliparser() -> argparse.Namespace:
             "for changes on tables, this should be uniq to pgnotefi clients."
         ),
     )
-    trigger_fn_settings.add_argument(
+    common_arguments.add_argument(
         "--function-name",
         default="fn_pgnotefi_table_change",
         help=(
@@ -24,50 +24,44 @@ def cliparser() -> argparse.Namespace:
             "This must be uniq."
         ),
     )
-    trigger_fn_settings.add_argument(
+    common_arguments.add_argument(
         "--trigger-name-prefix",
         default="tg_pgnotefi_table_change_",
         help="All triggers installed on tables will start with this prefix.",
+    )
+    common_arguments.add_argument(
+        "--commit",
+        action="store_true",
+        help="Commit changes to DB.",
+    )
+    common_arguments.add_argument(
+        "--dsn",
+        default=str(env.parsed.dsn),
+        help=(
+            "PostgreSQL DSN format: 'postgresql://user:password@host:port/dbname'."
+            "Default is environment-specific."
+        ),
     )
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--dsn", default=str(env.parsed.dsn))
+
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    mock = subparsers.add_parser(
-        "mock",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        parents=[trigger_fn_settings],
-    )
     install = subparsers.add_parser(
         "install",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        parents=[trigger_fn_settings],
+        parents=[common_arguments],
     )
+    install.add_argument("tables", nargs=argparse.ONE_OR_MORE)
+
     subparsers.add_parser(
         "uninstall",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        parents=[trigger_fn_settings],
+        parents=[common_arguments],
     )
 
-    install.add_argument("tables", nargs=argparse.ONE_OR_MORE)
-    install.add_argument(
-        "--commit",
-        action="store_true",
-        help="Commit function and triggers to db.",
-    )
-
-    mock.add_argument(
-        "operation",
-        choices=["insert", "update", "delete"],
-        help="Operation to be used on the mocked event.",
-    )
-    mock.add_argument(
-        "table",
-        help="Name of the table to mock a change on.",
-    )
     return parser.parse_args()
 
 
@@ -87,7 +81,7 @@ async def main() -> None:
 
     if parsed.command == "install":
         install = [
-            queries.notify_function(
+            queries.create_notify_function(
                 channel_name=parsed.channel_name,
                 function_name=parsed.function_name,
             )
@@ -95,7 +89,7 @@ async def main() -> None:
 
         for table in parsed.tables:
             install.append(
-                queries.after_change_trigger(
+                queries.create_after_change_trigger(
                     table_name=table,
                     channel_name=parsed.channel_name,
                     function_name=parsed.function_name,
@@ -104,9 +98,10 @@ async def main() -> None:
             )
 
         combined = "\n".join(install)
-        print(combined, flush=True)
         if parsed.commit:
             await (await asyncpg.connect(dsn=parsed.dsn)).execute(combined)
+        else:
+            print("Use '--commit' to write changes to db.")
 
     if parsed.command == "uninstall":
         trigger_names = await (await asyncpg.connect(dsn=parsed.dsn)).fetch(
@@ -122,4 +117,7 @@ async def main() -> None:
             )
         )
         print(combined, flush=True)
-        await (await asyncpg.connect(dsn=parsed.dsn)).execute(combined)
+        if parsed.commit:
+            await (await asyncpg.connect(dsn=parsed.dsn)).execute(combined)
+        else:
+            print("Use '--commit' to write changes to db.")
