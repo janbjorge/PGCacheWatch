@@ -7,7 +7,6 @@ import pytest
 from pgnotefi import env, listeners, models, utils
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("N", (4, 8, 32))
 @pytest.mark.parametrize("operation", typing.get_args(models.OPERATIONS))
 async def test_eventqueue_and_pglistner(

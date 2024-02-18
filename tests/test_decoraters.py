@@ -6,17 +6,15 @@ import pytest
 from pgnotefi import decorators, listeners, models, strategies
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("N", (4, 16, 64, 512))
 async def test_gready_cache_decorator(N: int) -> None:
     statistics = collections.Counter[str]()
+    listener = await listeners.PGEventQueue.create(
+        models.PGChannel("test_cache_decorator")
+    )
 
     @decorators.cache(
-        strategy=strategies.Gready(
-            listener=await listeners.PGEventQueue.create(
-                models.PGChannel("test_cache_decorator")
-            )
-        ),
+        strategy=strategies.Gready(listener=listener),
         statistics_callback=lambda x: statistics.update([x]),
     )
     async def now() -> datetime.datetime:
@@ -25,3 +23,4 @@ async def test_gready_cache_decorator(N: int) -> None:
     await asyncio.gather(*[now() for _ in range(N)])
     assert statistics["hit"] == N - 1
     assert statistics["miss"] == 1
+    await listener._pgconn.close()

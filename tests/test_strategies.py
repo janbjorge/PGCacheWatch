@@ -5,7 +5,6 @@ import pytest
 from pgnotefi import listeners, models, strategies
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("N", (4, 16, 64))
 async def test_gready_strategy(
     N: int,
@@ -42,8 +41,9 @@ async def test_gready_strategy(
     for _ in range(N):
         assert not strategy.clear()
 
+    await listener._pgconn.close()
 
-@pytest.mark.asyncio
+
 @pytest.mark.parametrize("N", (4, 16, 64))
 async def test_windowed_strategy(
     N: int,
@@ -98,14 +98,15 @@ async def test_windowed_strategy(
         )
         assert not strategy.clear()
 
+    await listener._pgconn.close()
 
-@pytest.mark.asyncio
+
 @pytest.mark.parametrize("N", (4, 16, 64))
 @pytest.mark.parametrize(
     "dt",
     (
-        datetime.timedelta(milliseconds=50),
-        datetime.timedelta(milliseconds=100),
+        datetime.timedelta(milliseconds=5),
+        datetime.timedelta(milliseconds=10),
     ),
 )
 async def test_timed_strategy(
@@ -144,3 +145,5 @@ async def test_timed_strategy(
     # No evnets, no clear.
     for _ in range(N):
         assert not strategy.clear()
+
+    await listener._pgconn.close()

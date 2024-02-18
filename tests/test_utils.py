@@ -8,7 +8,6 @@ import pytest
 from pgnotefi import env, listeners, models, utils
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("N", (1, 2, 8))
 @pytest.mark.parametrize("operation", typing.get_args(models.OPERATIONS))
 async def test_emitevent(N: int, operation: str) -> None:
@@ -34,9 +33,10 @@ async def test_emitevent(N: int, operation: str) -> None:
     events = [listener.get_nowait() for _ in range(N)]
     assert len(events) == N
     assert [e.operation for e in events].count(operation) == N
+    await listener._pgconn.close()
+    await conn.close()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("max_iter", (100, 200, 500))
 async def test_pick_until_deadline_max_iter(max_iter: int):
     channel = "test_pick_until_deadline_max_iter"
@@ -62,8 +62,9 @@ async def test_pick_until_deadline_max_iter(max_iter: int):
         == max_iter
     )
 
+    await listener._pgconn.close()
 
-@pytest.mark.asyncio
+
 @pytest.mark.parametrize(
     "max_time",
     (
@@ -77,7 +78,9 @@ async def test_pick_until_deadline_max_time(
     monkeypatch: pytest.MonkeyPatch,
 ):
     channel = "test_pick_until_deadline_max_time"
-    listener = await listeners.PGEventQueue.create(models.PGChannel(channel))
+    listener = await listeners.PGEventQueue.create(
+        models.PGChannel(channel),
+    )
 
     x = -1
 
@@ -100,3 +103,4 @@ async def test_pick_until_deadline_max_time(
     )
     end = time.perf_counter()
     assert end - start >= max_time.total_seconds()
+    await listener._pgconn.close()

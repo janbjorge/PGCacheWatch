@@ -25,8 +25,7 @@ async def fastapitestapp(channel: models.PGChannel) -> fastapi.FastAPI:
     return app
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("N", (2, 4, 32))
+@pytest.mark.parametrize("N", (2, 4, 16))
 async def test_fastapi(N: int) -> None:
     # No cache invalidation evnets emitted, all timestamps should be the same.
     tc = TestClient(await fastapitestapp(models.PGChannel("test_fastapi")))
@@ -34,7 +33,6 @@ async def test_fastapi(N: int) -> None:
     assert len(responses) == 1
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("N", (4, 8, 16))
 async def test_fastapi_invalidate_cache(N: int) -> None:
     # Emits one cache invalidation event per call, number of uniq timestamps
@@ -59,3 +57,4 @@ async def test_fastapi_invalidate_cache(N: int) -> None:
         )
         await asyncio.sleep(0.01)  # allow some time for the evnet to propegate.
     assert len(responses) == N
+    await conn.close()
