@@ -3,7 +3,7 @@ import datetime
 
 import asyncpg
 
-from pgcachewatch import env, models, queries, utils
+from pgcachewatch import models, queries, utils
 
 
 def cliparser() -> argparse.Namespace:
@@ -33,14 +33,6 @@ def cliparser() -> argparse.Namespace:
         "--commit",
         action="store_true",
         help="Commit changes to DB.",
-    )
-    common_arguments.add_argument(
-        "--dsn",
-        default=str(env.parsed.dsn),
-        help=(
-            "PostgreSQL DSN format: 'postgresql://user:password@host:port/dbname'."
-            "Default is environment-specific."
-        ),
     )
 
     parser = argparse.ArgumentParser(
@@ -76,7 +68,7 @@ async def main() -> None:
                 table=parsed.table,
                 sent_at=datetime.datetime.now(tz=datetime.timezone.utc),
             ),
-            conn=await asyncpg.connect(dsn=parsed.dsn),
+            conn=await asyncpg.connect(),
         )
 
     if parsed.command == "install":
@@ -99,12 +91,12 @@ async def main() -> None:
 
         combined = "\n".join(install)
         if parsed.commit:
-            await (await asyncpg.connect(dsn=parsed.dsn)).execute(combined)
+            await (await asyncpg.connect()).execute(combined)
         else:
             print("Use '--commit' to write changes to db.")
 
     if parsed.command == "uninstall":
-        trigger_names = await (await asyncpg.connect(dsn=parsed.dsn)).fetch(
+        trigger_names = await (await asyncpg.connect()).fetch(
             queries.fetch_trigger_names(parsed.trigger_name_prefix),
         )
         combined = "\n\n".join(
@@ -118,6 +110,6 @@ async def main() -> None:
         )
         print(combined, flush=True)
         if parsed.commit:
-            await (await asyncpg.connect(dsn=parsed.dsn)).execute(combined)
+            await (await asyncpg.connect()).execute(combined)
         else:
             print("Use '--commit' to write changes to db.")

@@ -36,10 +36,6 @@ class DeadlineSetting(pydantic.BaseModel):
         return self
 
 
-class OsEnv(pydantic.BaseModel):
-    dsn: pydantic.PostgresDsn | None = pydantic.Field(default=None, alias="PGDSN")
-
-
 class Event(pydantic.BaseModel, frozen=True):
     """
     A class representing an event in a PostgreSQL channel.

@@ -45,5 +45,7 @@ jobs:
 
       - name: Full test
         env:
-          PGDSN: postgres://testuser:testpassword@localhost:5432/testdb
+          PGUSER: testuser
+          PGPASSWORD: testpassword
+          PGDATABASE: testdb
         run: pytest -v

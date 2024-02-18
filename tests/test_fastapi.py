@@ -5,7 +5,7 @@ import asyncpg
 import fastapi
 import pytest
 from fastapi.testclient import TestClient
-from pgcachewatch import decorators, env, listeners, models, strategies, utils
+from pgcachewatch import decorators, listeners, models, strategies, utils
 
 
 async def fastapitestapp(
@@ -52,8 +52,6 @@ async def test_fastapi_invalidate_cache(
     # Emits one cache invalidation event per call, number of uniq timestamps
     # should equal the number of calls(N).
 
-    assert (dsn := env.parsed.dsn)
-    conn = await asyncpg.connect(dsn=str(dsn))
     channel = models.PGChannel(f"test_fastapi_invalidate_cache_{N}")
     tc = TestClient(await fastapitestapp(channel, pgconn))
 
@@ -61,7 +59,7 @@ async def test_fastapi_invalidate_cache(
     for _ in range(N):
         responses.add(tc.get("/sysconf").json()["now"])
         await utils.emitevent(
-            conn=conn,
+            conn=pgconn,
             event=models.Event(
                 channel=channel,
                 operation="update",
@@ -71,4 +69,3 @@ async def test_fastapi_invalidate_cache(
         )
         await asyncio.sleep(0.01)  # allow some time for the evnet to propegate.
     assert len(responses) == N
-    await conn.close()
