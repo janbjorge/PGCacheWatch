@@ -1,4 +1,5 @@
-FROM postgres:latest
+ARG POSTGRES_VERSION
+FROM postgres:${POSTGRES_VERSION}
 ENV POSTGRES_USER=testuser
 ENV POSTGRES_PASSWORD=testpassword
 
