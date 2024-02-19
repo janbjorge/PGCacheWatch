@@ -22,7 +22,7 @@ async def test_emitevent(
     )
     await asyncio.gather(
         *[
-            utils.emitevent(
+            utils.emit_event(
                 pgpool,
                 models.Event(
                     channel=channel,

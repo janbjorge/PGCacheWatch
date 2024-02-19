@@ -58,7 +58,7 @@ async def test_fastapi_invalidate_cache(
     responses = set[str]()
     for _ in range(N):
         responses.add(tc.get("/sysconf").json()["now"])
-        await utils.emitevent(
+        await utils.emit_event(
             conn=pgconn,
             event=models.Event(
                 channel=channel,

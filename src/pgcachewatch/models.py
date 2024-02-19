@@ -36,7 +36,7 @@ class DeadlineSetting(pydantic.BaseModel):
         return self
 
 
-class Event(pydantic.BaseModel, frozen=True):
+class Event(pydantic.BaseModel):
     """
     A class representing an event in a PostgreSQL channel.
 
@@ -53,9 +53,10 @@ class Event(pydantic.BaseModel, frozen=True):
     sent_at: pydantic.AwareDatetime
     table: str
     received_at: pydantic.AwareDatetime = pydantic.Field(
+        init=False,
         default_factory=lambda: datetime.datetime.now(
             tz=datetime.timezone.utc,
-        )
+        ),
     )
 
     @property

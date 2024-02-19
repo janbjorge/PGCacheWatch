@@ -19,7 +19,7 @@ async def test_eventqueue_and_pglistner(
     eq = await listeners.PGEventQueue.create(channel, pgconn)
 
     for _ in range(N):
-        await utils.emitevent(
+        await utils.emit_event(
             conn=pgpool,
             event=models.Event(
                 channel=channel,
@@ -29,10 +29,10 @@ async def test_eventqueue_and_pglistner(
             ),
         )
     await asyncio.sleep(0.01)
-    evnets = set[models.Event]()
+    evnets = list[models.Event]()
     while True:
         try:
-            evnets.add(eq.get_nowait())
+            evnets.append(eq.get_nowait())
         except asyncio.QueueEmpty:
             break
 

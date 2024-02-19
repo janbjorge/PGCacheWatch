@@ -19,7 +19,7 @@ def make_key(
     return functools._make_key(args, kwds, typed)
 
 
-async def emitevent(
+async def emit_event(
     conn: asyncpg.Connection | asyncpg.Pool,
     event: models.Event,
 ) -> None:
@@ -29,7 +29,7 @@ async def emitevent(
     await conn.execute(
         "SELECT pg_notify($1, $2)",
         event.channel,
-        event.model_dump_json(exclude={"received_at"}),
+        event.model_dump_json(),
     )
 
 
