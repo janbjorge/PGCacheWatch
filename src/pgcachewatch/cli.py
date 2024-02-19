@@ -1,9 +1,9 @@
 import argparse
-import datetime
+import sys
 
 import asyncpg
 
-from pgcachewatch import models, queries, utils
+from pgcachewatch import queries
 
 
 def cliparser() -> argparse.Namespace:
@@ -60,57 +60,53 @@ def cliparser() -> argparse.Namespace:
 async def main() -> None:
     parsed = cliparser()
 
-    if parsed.command == "mock":
-        await utils.emitevent(
-            event=models.Event(
-                channel=parsed.channel_name,
-                operation=parsed.operation,
-                table=parsed.table,
-                sent_at=datetime.datetime.now(tz=datetime.timezone.utc),
-            ),
-            conn=await asyncpg.connect(),
-        )
-
-    if parsed.command == "install":
-        install = [
-            queries.create_notify_function(
-                channel_name=parsed.channel_name,
-                function_name=parsed.function_name,
-            )
-        ]
-
-        for table in parsed.tables:
-            install.append(
-                queries.create_after_change_trigger(
-                    table_name=table,
+    match parsed.command:
+        case "install":
+            install = [
+                queries.create_notify_function(
                     channel_name=parsed.channel_name,
                     function_name=parsed.function_name,
-                    trigger_name_prefix=parsed.trigger_name_prefix,
+                )
+            ]
+
+            for table in parsed.tables:
+                install.append(
+                    queries.create_after_change_trigger(
+                        table_name=table,
+                        channel_name=parsed.channel_name,
+                        function_name=parsed.function_name,
+                        trigger_name_prefix=parsed.trigger_name_prefix,
+                    )
+                )
+
+            combined = "\n".join(install)
+            print(combined, flush=True)
+            if parsed.commit:
+                await (await asyncpg.connect()).execute(combined)
+            else:
+                print(
+                    "::: Use '--commit' to write changes to db. :::",
+                    file=sys.stderr,
+                )
+
+        case "uninstall":
+            trigger_names = await (await asyncpg.connect()).fetch(
+                queries.fetch_trigger_names(parsed.trigger_name_prefix),
+            )
+            combined = "\n".join(
+                (
+                    "\n".join(
+                        queries.drop_trigger(t["trigger_name"], t["table"])
+                        for t in trigger_names
+                    ),
+                    queries.drop_function(parsed.function_name),
                 )
             )
-
-        combined = "\n".join(install)
-        print(combined, flush=True)
-        if parsed.commit:
-            await (await asyncpg.connect()).execute(combined)
-        else:
-            print("Use '--commit' to write changes to db.")
-
-    if parsed.command == "uninstall":
-        trigger_names = await (await asyncpg.connect()).fetch(
-            queries.fetch_trigger_names(parsed.trigger_name_prefix),
-        )
-        combined = "\n\n".join(
-            (
-                "\n".join(
-                    queries.drop_trigger(t["trigger_name"], t["table"])
-                    for t in trigger_names
-                ),
-                queries.drop_function(parsed.function_name),
-            )
-        )
-        print(combined, flush=True)
-        if parsed.commit:
-            await (await asyncpg.connect()).execute(combined)
-        else:
-            print("Use '--commit' to write changes to db.")
+            print(combined, flush=True)
+            if parsed.commit:
+                await (await asyncpg.connect()).execute(combined)
+            else:
+                print(
+                    "::: Use '--commit' to write changes to db. :::",
+                    file=sys.stderr,
+                )
