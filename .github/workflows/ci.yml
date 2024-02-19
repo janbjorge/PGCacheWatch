@@ -1,4 +1,4 @@
-name: Build and test pgcachewatch.
+name: Build and test pgcachewatch
 
 on:
   pull_request:
@@ -13,23 +13,8 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-        postgres-version: ["13", "14", "15", "16"]
+        postgres-version: ["14", "15", "16"]
         os: [ubuntu-latest]
-
-    services:
-      postgres:
-        image: postgres:${{ matrix.postgres-version }}
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpassword
-          POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 1s
-          --health-timeout 5s
-          --health-retries 10
 
     steps:
       - uses: actions/checkout@v4
@@ -39,14 +24,32 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Build custom PostgreSQL Docker image
+        run: |
+          docker build \
+            --build-arg POSTGRES_VERSION=${{ matrix.postgres-version }} \
+            -t custom-postgres:latest db/
+        env:
+          POSTGRES_VERSION: ${{ matrix.postgres-version }}
+
+      - name: Start PostgreSQL container
+        run: |
+          docker run -d --network host --name postgres custom-postgres:latest
+
       - name: Install pgcachewatch
         run: |
           pip install pip -U
           pip install .[dev]
 
+      - name: Wait for PostgreSQL to become ready
+        run: |
+          for i in {1..10}; do
+            docker exec postgres pg_isready && break
+            sleep 5
+          done
+
+      - name: Check PostgreSQL Container Logs
+        run: docker logs postgres
+
       - name: Full test
-        env:
-          PGUSER: testuser
-          PGPASSWORD: testpassword
-          PGDATABASE: testdb
         run: pytest -v
