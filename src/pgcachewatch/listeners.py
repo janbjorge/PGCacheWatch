@@ -8,7 +8,7 @@ import asyncpg
 from . import models
 
 
-def _critical_termination_listener() -> None:
+def _critical_termination_listener(*_: object, **__: object) -> None:
     # Must be defined in the global namespace, as ayncpg keeps
     # a set of functions to call. This this will now happen once as
     # all instance will point to the same function.
@@ -61,7 +61,7 @@ class PGEventQueue(asyncio.Queue[models.Event]):
             max_latency=max_latency,
             _called_by_create=True,
         )
-        me._pg_connection.add_termination_listener(_critical_termination_listener)  # type: ignore[arg-type]
+        me._pg_connection.add_termination_listener(_critical_termination_listener)
         await me._pg_connection.add_listener(me._pg_channel, me.parse_and_put)  # type: ignore[arg-type]
 
         return me
