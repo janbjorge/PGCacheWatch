@@ -10,13 +10,13 @@ from pgcachewatch import listeners, models, utils
 
 @pytest.mark.parametrize("N", (1, 2, 8))
 @pytest.mark.parametrize("operation", typing.get_args(models.OPERATIONS))
-async def test_emitevent(
+async def test_emit_event(
     N: int,
     operation: models.OPERATIONS,
     pgconn: asyncpg.Connection,
     pgpool: asyncpg.Pool,
 ) -> None:
-    channel = "test_emitevent"
+    channel = "test_emit_event"
     listener = await listeners.PGEventQueue.create(
         models.PGChannel(channel), pgconn=pgconn
     )
