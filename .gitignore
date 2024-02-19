@@ -131,3 +131,7 @@ dmypy.json
 
 # vscode project settings
 .vscode/
+
+# Dynamic version
+src/pgcachewatch/_version.py
+src/pgcachewatch/_version.py

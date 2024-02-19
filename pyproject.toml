@@ -1,15 +1,15 @@
 [build-system]
-requires = ["pip>=22.0.0", "setuptools"]
 build-backend = "setuptools.build_meta"
+requires = ["pip>=22.0.0", "setuptools", "setuptools_scm", "wheel"]
 
 [project]
-name = "PGCacheWatch"
+authors = [{ name = "janbjorge"}]
 description = "A Python library for real-time PostgreSQL event-driven cache invalidation, leveraging existing database infrastructure"
+dynamic = ["version"]
+license = { text = "Apache 2.0" }
+name = "PGCacheWatch"
 readme = "README.md"
 requires-python = ">=3.10"
-version = "0.0.6"
-license = { text = "Apache 2.0" }
-authors = [{ name = "janbjorge"}]
 
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -50,6 +50,9 @@ dev = [
     "pytest",
     "ruff",
 ]
+
+[tool.setuptools_scm]
+write_to = "src/pgcachewatch/_version.py"
 
 [tool.ruff]
 line-length = 88
