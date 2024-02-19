@@ -6,12 +6,23 @@ import pytest
 from pgcachewatch import cli, decorators, listeners, models, strategies
 
 
-async def test_1_install_triggers(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_1_install_triggers(
+    monkeypatch: pytest.MonkeyPatch,
+    pgconn: asyncpg.Connection,
+) -> None:
     monkeypatch.setattr(
         "sys.argv",
         ["pgcachewatch", "install", "sysconf", "--commit"],
     )
     await cli.main()
+    assert (
+        len(
+            await pgconn.fetch(
+                cli.queries.fetch_trigger_names(cli.cliparser().trigger_name)
+            )
+        )
+        == 3
+    )
 
 
 @pytest.mark.parametrize("N", (2, 8, 16))
@@ -43,9 +54,20 @@ async def test_2_caching(
     assert statistics["hit"] == N - 1
 
 
-async def test_3_uninstall_triggers(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_3_uninstall_triggers(
+    monkeypatch: pytest.MonkeyPatch,
+    pgconn: asyncpg.Connection,
+) -> None:
     monkeypatch.setattr(
         "sys.argv",
         ["pgcachewatch", "uninstall", "--commit"],
     )
     await cli.main()
+    assert (
+        len(
+            await pgconn.fetch(
+                cli.queries.fetch_trigger_names(cli.cliparser().trigger_name)
+            )
+        )
+        == 0
+    )

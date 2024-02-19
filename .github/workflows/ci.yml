@@ -8,13 +8,14 @@ on:
 
 jobs:
   ci:
-    name: PY ${{ matrix.python-version }} on ${{ matrix.os }} using pg ${{ matrix.postgres-version }}
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
         postgres-version: ["14", "15", "16"]
         os: [ubuntu-latest]
+
+    name: PY ${{ matrix.python-version }} on ${{ matrix.os }} using PG ${{ matrix.postgres-version }}
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4

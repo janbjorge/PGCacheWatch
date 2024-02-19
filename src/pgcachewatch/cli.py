@@ -25,7 +25,7 @@ def cliparser() -> argparse.Namespace:
         ),
     )
     common_arguments.add_argument(
-        "--trigger-name-prefix",
+        "--trigger-name",
         default="tg_pgcachewatch_table_change_",
         help="All triggers installed on tables will start with this prefix.",
     )
@@ -75,7 +75,7 @@ async def main() -> None:
                         table_name=table,
                         channel_name=parsed.channel_name,
                         function_name=parsed.function_name,
-                        trigger_name_prefix=parsed.trigger_name_prefix,
+                        trigger_name_prefix=parsed.trigger_name,
                     )
                 )
 
@@ -91,7 +91,7 @@ async def main() -> None:
 
         case "uninstall":
             trigger_names = await (await asyncpg.connect()).fetch(
-                queries.fetch_trigger_names(parsed.trigger_name_prefix),
+                queries.fetch_trigger_names(parsed.trigger_name),
             )
             combined = "\n".join(
                 (

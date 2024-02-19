@@ -26,8 +26,8 @@ def create_after_change_trigger(
 ) -> str:
     return f"""
 CREATE OR REPLACE TRIGGER {trigger_name_prefix}{table_name}
-  AFTER INSERT OR UPDATE OR DELETE ON {table_name}
-  FOR EACH ROW EXECUTE PROCEDURE {function_name}_{channel_name}();
+  AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON {table_name}
+  EXECUTE FUNCTION {function_name}_{channel_name}();
 """
 
 
