@@ -7,7 +7,6 @@ OPERATIONS = typing.Literal[
     "insert",
     "update",
     "delete",
-    "truncate",
 ]
 PGChannel = typing.NewType(
     "PGChannel",
@@ -42,7 +41,7 @@ class Event(pydantic.BaseModel):
 
     Attributes:
         channel: The PostgreSQL channel the event belongs to.
-        operation: The type of operation performed (insert, update, delete or truncate).
+        operation: The type of operation performed (insert, update or delete).
         sent_at: The timestamp when the event was sent.
         table: The table the event is associated with.
         received_at: The timestamp when the event was received.

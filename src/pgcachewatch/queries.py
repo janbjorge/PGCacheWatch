@@ -26,7 +26,7 @@ def create_after_change_trigger(
 ) -> str:
     return f"""
 CREATE OR REPLACE TRIGGER {trigger_name_prefix}{table_name}
-  AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON {table_name}
+  AFTER INSERT OR UPDATE OR DELETE ON {table_name}
   FOR EACH ROW EXECUTE PROCEDURE {function_name}_{channel_name}();
 """
 
@@ -44,7 +44,7 @@ WHERE
 
 
 def drop_trigger(trigger_name: str, table: str) -> str:
-    return f"""DROP IF EXISTS {trigger_name} ON {table};"""
+    return f"""DROP TRIGGER IF EXISTS {trigger_name} ON {table};"""
 
 
 def drop_function(name: str) -> str:
