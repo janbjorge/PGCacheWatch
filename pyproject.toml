@@ -7,7 +7,7 @@ name = "PGCacheWatch"
 description = "A Python library for real-time PostgreSQL event-driven cache invalidation, leveraging existing database infrastructure"
 readme = "README.md"
 requires-python = ">=3.10"
-version = "0.0.3"
+version = "0.0.4"
 license = { text = "Apache 2.0" }
 authors = [{ name = "janbjorge"}]
 
