@@ -90,6 +90,7 @@ async def main() -> None:
             )
 
         combined = "\n".join(install)
+        print(combined, flush=True)
         if parsed.commit:
             await (await asyncpg.connect()).execute(combined)
         else:
