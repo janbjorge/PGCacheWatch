@@ -3,7 +3,6 @@ name: Build and test pgcachewatch.
 on:
   pull_request:
     branches: [main]
-  push:
 
 jobs:
   ci:
@@ -48,4 +47,4 @@ jobs:
           PGUSER: testuser
           PGPASSWORD: testpassword
           PGDATABASE: testdb
-        run: pytest -v
+        run: pytest
