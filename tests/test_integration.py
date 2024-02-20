@@ -37,10 +37,8 @@ async def test_2_caching(
     pgpool: asyncpg.Pool,
 ) -> None:
     statistics = collections.Counter[str]()
-    listener = await listeners.PGEventQueue.create(
-        models.PGChannel("test_2_caching"),
-        pgconn=pgconn,
-    )
+    listener = listeners.PGEventQueue()
+    await listener.connect(pgconn, models.PGChannel("test_2_caching"))
 
     cnt = 0
 
@@ -64,9 +62,10 @@ async def test_3_cache_invalidation_update(
     pgpool: asyncpg.Pool,
 ) -> None:
     statistics = collections.Counter[str]()
-    listener = await listeners.PGEventQueue.create(
+    listener = listeners.PGEventQueue()
+    await listener.connect(
+        pgconn,
         models.PGChannel("ch_pgcachewatch_table_change"),
-        pgconn=pgconn,
     )
 
     @decorators.cache(
@@ -97,9 +96,10 @@ async def test_3_cache_invalidation_insert(
     pgpool: asyncpg.Pool,
 ) -> None:
     statistics = collections.Counter[str]()
-    listener = await listeners.PGEventQueue.create(
+    listener = listeners.PGEventQueue()
+    await listener.connect(
+        pgconn,
         models.PGChannel("ch_pgcachewatch_table_change"),
-        pgconn=pgconn,
     )
 
     @decorators.cache(
@@ -131,9 +131,10 @@ async def test_3_cache_invalidation_delete(
     pgpool: asyncpg.Pool,
 ) -> None:
     statistics = collections.Counter[str]()
-    listener = await listeners.PGEventQueue.create(
+    listener = listeners.PGEventQueue()
+    await listener.connect(
+        pgconn,
         models.PGChannel("ch_pgcachewatch_table_change"),
-        pgconn=pgconn,
     )
 
     @decorators.cache(

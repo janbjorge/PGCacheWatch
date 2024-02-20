@@ -29,24 +29,40 @@ pgcachewatch install <tables-to-cache>
 Example showing how to use PGCacheWatch for cache invalidation in a FastAPI app
 
 ```python
+import contextlib
+import typing
+
 import asyncpg
 from fastapi import FastAPI
 from pgcachewatch import decorators, listeners, models, strategies
 
-app = FastAPI()
+listener = listeners.PGEventQueue()
 
-async def setup_app(channel: models.PGChannel) -> FastAPI:
+
+@contextlib.asynccontextmanager
+async def app_setup_teardown(_: FastAPI) -> typing.AsyncGenerator[None, None]:
     conn = await asyncpg.connect()
-    listener = await listeners.PGEventQueue.create(channel, conn)
+    await listener.connect(conn, models.PGChannel("ch_pgcachewatch_table_change"))
+    yield
+    await conn.close()
 
-    @decorators.cache(strategy=strategies.Greedy(listener=listener))
-    async def cached_query():
-        # Simulate a database query
-        return {"data": "query result"}
 
-    @app.get("/data")
-    async def get_data():
-        return await cached_query()
+APP = FastAPI(lifespan=app_setup_teardown)
 
-    return app
+
+# Only allow for cache refresh after an update
+@decorators.cache(
+    strategy=strategies.Gready(
+        listener=listener,
+        predicate=lambda x: x.operation == "update",
+    )
+)
+async def cached_query() -> dict[str, str]:
+    # Simulate a database query
+    return {"data": "query result"}
+
+
+@APP.get("/data")
+async def get_data() -> dict:
+    return await cached_query()
 ```

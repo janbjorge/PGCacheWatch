@@ -10,10 +10,8 @@ from pgcachewatch import decorators, listeners, models, strategies
 @pytest.mark.parametrize("N", (4, 16, 64, 512))
 async def test_gready_cache_decorator(N: int, pgconn: asyncpg.Connection) -> None:
     statistics = collections.Counter[str]()
-    listener = await listeners.PGEventQueue.create(
-        models.PGChannel("test_cache_decorator"),
-        pgconn=pgconn,
-    )
+    listener = listeners.PGEventQueue()
+    await listener.connect(pgconn, models.PGChannel("test_cache_decorator"))
 
     @decorators.cache(
         strategy=strategies.Gready(listener=listener),

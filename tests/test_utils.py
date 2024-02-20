@@ -17,9 +17,8 @@ async def test_emit_event(
     pgpool: asyncpg.Pool,
 ) -> None:
     channel = "test_emit_event"
-    listener = await listeners.PGEventQueue.create(
-        models.PGChannel(channel), pgconn=pgconn
-    )
+    listener = listeners.PGEventQueue()
+    await listener.connect(pgconn, models.PGChannel(channel))
     await asyncio.gather(
         *[
             utils.emit_event(
@@ -47,10 +46,8 @@ async def test_pick_until_deadline_max_iter(
     pgconn: asyncpg.Connection,
 ) -> None:
     channel = "test_pick_until_deadline_max_iter"
-    listener = await listeners.PGEventQueue.create(
-        models.PGChannel(channel),
-        pgconn=pgconn,
-    )
+    listener = listeners.PGEventQueue()
+    await listener.connect(pgconn, models.PGChannel(channel))
 
     items = list(range(max_iter * 2))
     for item in items:
@@ -87,10 +84,8 @@ async def test_pick_until_deadline_max_time(
     pgconn: asyncpg.Connection,
 ) -> None:
     channel = "test_pick_until_deadline_max_time"
-    listener = await listeners.PGEventQueue.create(
-        models.PGChannel(channel),
-        pgconn=pgconn,
-    )
+    listener = listeners.PGEventQueue()
+    await listener.connect(pgconn, models.PGChannel(channel))
 
     x = -1
 
