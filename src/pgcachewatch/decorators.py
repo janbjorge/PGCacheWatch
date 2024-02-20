@@ -1,34 +1,27 @@
 import asyncio
-import contextlib
 import logging
-import typing
+from typing import Awaitable, Callable, Hashable, Literal, TypeVar
 
-import typing_extensions
+from typing_extensions import ParamSpec
 
 from pgcachewatch import strategies, utils
 
-P = typing_extensions.ParamSpec("P")
-T = typing.TypeVar("T")
+P = ParamSpec("P")
+T = TypeVar("T")
 
 
 def cache(
     strategy: strategies.Strategy,
-    statistics_callback: typing.Callable[[typing.Literal["hit", "miss"]], None]
-    | None = None,
-) -> typing.Callable[
-    [typing.Callable[P, typing.Awaitable[T]]],
-    typing.Callable[P, typing.Awaitable[T]],
-]:
-    def outer(
-        fn: typing.Callable[P, typing.Awaitable[T]],
-    ) -> typing.Callable[P, typing.Awaitable[T]]:
-        cached = dict[typing.Hashable, asyncio.Future[T]]()
+    statistics_callback: Callable[[Literal["hit", "miss"]], None] | None = None,
+) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Awaitable[T]]]:
+    def outer(fn: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
+        cached = dict[Hashable, asyncio.Future[T]]()
 
-        async def inner(*args: P.args, **kw: P.kwargs) -> T:
+        async def inner(*args: P.args, **kwargs: P.kwargs) -> T:
             # If db-conn is down, disable cache.
             if not strategy.pg_connection_healthy():
                 logging.critical("Database connection is closed, caching disabled.")
-                return await fn(*args, **kw)
+                return await fn(*args, **kwargs)
 
             # Clear cache if we have a event from
             # the database the instructs us to clear.
@@ -36,40 +29,37 @@ def cache(
                 logging.debug("Cache clear")
                 cached.clear()
 
-            # Check for cache hit
-            key = utils.make_key(args, kw)
-            with contextlib.suppress(KeyError):
-                # OBS: Will only await if the cache key hits.
-                result = await cached[key]
+            key = utils.make_key(args, kwargs)
+
+            try:
+                waiter = cached[key]
+            except KeyError:
+                # Cache miss
+                ...
+            else:
+                # Cache hit
                 logging.debug("Cache hit")
                 if statistics_callback:
                     statistics_callback("hit")
-                return result
+                return await waiter
 
-            # Below deals with a cache miss.
             logging.debug("Cache miss")
             if statistics_callback:
                 statistics_callback("miss")
 
-            # By using a future as placeholder we avoid
-            # cache stampeded. Note that on the "miss" branch/path, controll
-            # is never given to the eventloopscheduler before the future
-            # is create.
+            # Initialize Future to prevent cache stampedes.
             cached[key] = waiter = asyncio.Future[T]()
-            try:
-                result = await fn(*args, **kw)
-            except Exception as e:
-                cached.pop(
-                    key, None
-                )  # Next try should not result in a repeating exception
-                waiter.set_exception(
-                    e
-                )  # Propegate exception to other callers who are waiting.
-                raise e from None  # Propegate exception to first caller.
-            else:
-                waiter.set_result(result)
 
-            return result
+            try:
+                # # Attempt to compute result and set for waiter
+                waiter.set_result(await fn(*args, **kwargs))
+            except Exception as e:
+                # Remove key from cache on failure.
+                cached.pop(key, None)
+                # Propagate exception to all awaiting the future.
+                waiter.set_exception(e)
+
+            return await waiter
 
         return inner
 
