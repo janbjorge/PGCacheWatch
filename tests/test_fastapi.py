@@ -14,7 +14,8 @@ async def fastapitestapp(
 ) -> fastapi.FastAPI:
     app = fastapi.FastAPI()
 
-    listener = await listeners.PGEventQueue.create(channel, pgconn)
+    listener = listeners.PGEventQueue()
+    await listener.connect(pgconn, channel)
 
     @decorators.cache(strategy=strategies.Gready(listener=listener))
     async def slow_db_read() -> dict:

@@ -9,7 +9,10 @@ from pgcachewatch import listeners, models, strategies
 @pytest.mark.parametrize("N", (4, 16, 64))
 async def test_gready_strategy(N: int, pgconn: asyncpg.Connection) -> None:
     channel = models.PGChannel("test_gready_strategy")
-    listener = await listeners.PGEventQueue.create(channel, pgconn)
+
+    listener = listeners.PGEventQueue()
+    await listener.connect(pgconn, channel)
+
     strategy = strategies.Gready(
         listener=listener,
         predicate=lambda e: e.operation == "insert",
@@ -47,7 +50,8 @@ async def test_windowed_strategy(
     pgconn: asyncpg.Connection,
 ) -> None:
     channel = models.PGChannel("test_windowed_strategy")
-    listener = await listeners.PGEventQueue.create(channel, pgconn)
+    listener = listeners.PGEventQueue()
+    await listener.connect(pgconn, channel)
     strategy = strategies.Windowed(
         listener=listener, window=["insert", "update", "delete"]
     )
@@ -111,7 +115,8 @@ async def test_timed_strategy(
     pgconn: asyncpg.Connection,
 ) -> None:
     channel = models.PGChannel("test_timed_strategy")
-    listener = await listeners.PGEventQueue.create(channel, pgconn)
+    listener = listeners.PGEventQueue()
+    await listener.connect(pgconn, channel)
     strategy = strategies.Timed(listener=listener, timedelta=dt)
 
     # Bursed spaced out accoring to min dt req. to trigger a refresh.
