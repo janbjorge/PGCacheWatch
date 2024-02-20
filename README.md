@@ -1,5 +1,10 @@
-# pgcachewatch
-pgcachewatch is a Python library crafted to empower applications with real-time PostgreSQL event notifications for efficient cache invalidation, directly leveraging existing PostgreSQL infrastructure. This approach eliminates the need for additional technologies for cache management, simplifying your stack while enhancing performance and real-time data consistency.
+# PGCacheWatch
+[![CI](https://github.com/janbjorge/PGCacheWatch/actions/workflows/ci.yml/badge.svg)](https://github.com/janbjorge/PGCacheWatch/actions/workflows/ci.yml?query=branch%3Amain)
+[![pypi](https://img.shields.io/pypi/v/PGCacheWatch.svg)](https://pypi.python.org/pypi/PGCacheWatch)
+[![downloads](https://static.pepy.tech/badge/PGCacheWatch/month)](https://pepy.tech/project/PGCacheWatch)
+[![versions](https://img.shields.io/pypi/pyversions/PGCacheWatch.svg)](https://github.com/janbjorge/PGCacheWatch)
+
+PGCacheWatch is a Python library crafted to empower applications with real-time PostgreSQL event notifications for efficient cache invalidation, directly leveraging existing PostgreSQL infrastructure. This approach eliminates the need for additional technologies for cache management, simplifying your stack while enhancing performance and real-time data consistency.
 
 ## Key Advantages
 - **Leverage Existing Infrastructure**: Utilizes PostgreSQL's native NOTIFY/LISTEN capabilities for event-driven cache invalidation, avoiding the overhead of integrating external caching systems.
@@ -8,20 +13,20 @@ pgcachewatch is a Python library crafted to empower applications with real-time 
 - **Simple Yet Powerful API**: Designed with simplicity in mind, offering a straightforward setup process and an intuitive API for managing cache invalidation logic.
 
 ## Installation
-To install pgcachewatch, run the following command in your terminal:
+To install PGCacheWatch, run the following command in your terminal:
 ```bash
 pip install pgcachewatch
 ```
 
-## Using pgcachewatch
+## Using PGCacheWatch
 ### Setting Up
-Initialize PostgreSQL triggers to emit NOTIFY events on data changes. pgcachewatch provides utility scripts for easy trigger setup
+Initialize PostgreSQL triggers to emit NOTIFY events on data changes. PGCacheWatch provides utility scripts for easy trigger setup
 ```bash
-pgcachewatch install --tables your_table_names
+pgcachewatch install <tables-to-cache>
 ```
 
 ### FastAPI Example
-Example showing how to use pgcachewatch for cache invalidation in a FastAPI app
+Example showing how to use PGCacheWatch for cache invalidation in a FastAPI app
 
 ```python
 import asyncpg
