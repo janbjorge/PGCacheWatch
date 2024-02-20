@@ -37,11 +37,11 @@ class Gready(Strategy):
         return self._listener.pg_connection_healthy()
 
     def clear(self) -> bool:
-        for event in utils.pick_until_deadline(
+        for current in utils.pick_until_deadline(
             self._listener,
             settings=self._deadline,
         ):
-            if self._predicate(event):
+            if self._predicate(current):
                 return True
         return False
 
@@ -68,11 +68,11 @@ class Windowed(Strategy):
         return self._listener.pg_connection_healthy()
 
     def clear(self) -> bool:
-        for event in utils.pick_until_deadline(
+        for current in utils.pick_until_deadline(
             self._listener,
             settings=self._deadline,
         ):
-            self._events.append(event.operation)
+            self._events.append(current.operation)
             if len(self._window) == len(self._events) and all(
                 w == e for w, e in zip(self._window, self._events)
             ):
