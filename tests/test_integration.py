@@ -38,7 +38,7 @@ async def test_2_caching(
 ) -> None:
     statistics = collections.Counter[str]()
     listener = listeners.PGEventQueue()
-    await listener.connect(pgconn, models.PGChannel("test_2_caching"))
+    await listener.connect(pgconn, models.PGChannel("ch_pgcachewatch_table_change"))
 
     cnt = 0
 
