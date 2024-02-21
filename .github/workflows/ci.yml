@@ -30,7 +30,7 @@ jobs:
         run: |
           docker build \
             --build-arg POSTGRES_VERSION=${{ matrix.postgres-version }} \
-            -t custom-postgres:latest db/
+            -t custom-postgres:latest tests/db/
         env:
           POSTGRES_VERSION: ${{ matrix.postgres-version }}
 
