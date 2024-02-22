@@ -93,11 +93,11 @@ class PGEventQueue(asyncio.Queue[models.Event]):
             parsed = models.Event.model_validate(
                 json.loads(payload) | {"channel": channel}
             )
-            if parsed.latency > self._max_latency:
-                logging.warning("Latency for %s above %s.", parsed, self._max_latency)
         except Exception:
             logging.exception("Unable to parse `%s`.", payload)
         else:
+            if parsed.latency > self._max_latency:
+                logging.warning("Latency for %s above %s.", parsed, self._max_latency)
             logging.info("Received event: %s on %s", parsed, channel)
             try:
                 self.put_nowait(parsed)
