@@ -8,6 +8,7 @@ OPERATIONS = typing.Literal[
     "update",
     "delete",
 ]
+
 PGChannel = typing.NewType(
     "PGChannel",
     str,
