@@ -13,7 +13,7 @@ class Strategy(typing.Protocol):
     def clear(self) -> bool:
         raise NotImplementedError
 
-    def pg_connection_healthy(self) -> bool:
+    def connection_healthy(self) -> bool:
         raise NotImplementedError
 
 
@@ -24,22 +24,22 @@ class Gready(Strategy):
 
     def __init__(
         self,
-        listener: listeners.PGEventQueue,
-        deadline: models.DeadlineSetting = models.DeadlineSetting(),
+        listener: listeners.EventQueueProtocol,
+        settings: models.DeadlineSetting = models.DeadlineSetting(),
         predicate: typing.Callable[[models.Event], bool] = bool,
     ) -> None:
         super().__init__()
         self._listener = listener
         self._predicate = predicate
-        self._deadline = deadline
+        self._settings = settings
 
-    def pg_connection_healthy(self) -> bool:
-        return self._listener.pg_connection_healthy()
+    def connection_healthy(self) -> bool:
+        return self._listener.connection_healthy()
 
     def clear(self) -> bool:
         for current in utils.pick_until_deadline(
             self._listener,
-            settings=self._deadline,
+            settings=self._settings,
         ):
             if self._predicate(current):
                 return True
@@ -54,23 +54,23 @@ class Windowed(Strategy):
 
     def __init__(
         self,
-        listener: listeners.PGEventQueue,
+        listener: listeners.EventQueueProtocol,
         window: list[models.OPERATIONS],
-        deadline: models.DeadlineSetting = models.DeadlineSetting(),
+        settings: models.DeadlineSetting = models.DeadlineSetting(),
     ) -> None:
         super().__init__()
         self._listener = listener
         self._window = window
-        self._deadline = deadline
+        self._settings = settings
         self._events = collections.deque[models.OPERATIONS](maxlen=len(self._window))
 
-    def pg_connection_healthy(self) -> bool:
-        return self._listener.pg_connection_healthy()
+    def connection_healthy(self) -> bool:
+        return self._listener.connection_healthy()
 
     def clear(self) -> bool:
         for current in utils.pick_until_deadline(
             self._listener,
-            settings=self._deadline,
+            settings=self._settings,
         ):
             self._events.append(current.operation)
             if len(self._window) == len(self._events) and all(
@@ -87,23 +87,23 @@ class Timed(Strategy):
 
     def __init__(
         self,
-        listener: listeners.PGEventQueue,
+        listener: listeners.EventQueueProtocol,
         timedelta: datetime.timedelta,
-        deadline: models.DeadlineSetting = models.DeadlineSetting(),
+        settings: models.DeadlineSetting = models.DeadlineSetting(),
     ) -> None:
         super().__init__()
         self._listener = listener
         self._timedelta = timedelta
-        self._deadline = deadline
+        self._settings = settings
         self._previous = datetime.datetime.now(tz=datetime.timezone.utc)
 
-    def pg_connection_healthy(self) -> bool:
-        return self._listener.pg_connection_healthy()
+    def connection_healthy(self) -> bool:
+        return self._listener.connection_healthy()
 
     def clear(self) -> bool:
         for current in utils.pick_until_deadline(
             queue=self._listener,
-            settings=self._deadline,
+            settings=self._settings,
         ):
             if current.sent_at - self._previous > self._timedelta:
                 self._previous = current.sent_at

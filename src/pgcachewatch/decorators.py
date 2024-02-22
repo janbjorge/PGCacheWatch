@@ -19,7 +19,7 @@ def cache(
 
         async def inner(*args: P.args, **kwargs: P.kwargs) -> T:
             # If db-conn is down, disable cache.
-            if not strategy.pg_connection_healthy():
+            if not strategy.connection_healthy():
                 logging.critical("Database connection is closed, caching disabled.")
                 return await fn(*args, **kwargs)
 

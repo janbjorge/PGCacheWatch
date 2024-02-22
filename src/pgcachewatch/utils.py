@@ -34,7 +34,7 @@ async def emit_event(
 
 
 def pick_until_deadline(
-    queue: listeners.PGEventQueue,
+    queue: listeners.EventQueueProtocol,
     settings: models.DeadlineSetting,
 ) -> typing.Iterator[models.Event]:
     """
