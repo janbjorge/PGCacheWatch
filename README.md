@@ -144,7 +144,7 @@ APP = FastAPI(lifespan=app_setup_teardown)
 
 # Decorate the cached_query function with cache invalidation logic.
 @decorators.cache(
-    strategy=strategies.Greedy(  # Note: Assuming 'Gready' is a typo, corrected to 'Greedy'.
+    strategy=strategies.Greedy(
         listener=listener,
         # Invalidate the cache only for 'update' operations on the database.
         predicate=lambda x: x.operation == "update",

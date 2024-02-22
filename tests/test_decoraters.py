@@ -9,13 +9,13 @@ from pgcachewatch import decorators, listeners, models, strategies
 
 
 @pytest.mark.parametrize("N", (1, 2, 4, 16, 64))
-async def test_gready_cache_decorator(N: int, pgconn: asyncpg.Connection) -> None:
+async def test_greedy_cache_decorator(N: int, pgconn: asyncpg.Connection) -> None:
     statistics = collections.Counter[str]()
     listener = listeners.PGEventQueue()
     await listener.connect(pgconn, models.PGChannel("test_cache_decorator"))
 
     @decorators.cache(
-        strategy=strategies.Gready(listener=listener),
+        strategy=strategies.Greedy(listener=listener),
         statistics_callback=lambda x: statistics.update([x]),
     )
     async def now() -> datetime.datetime:
@@ -29,18 +29,18 @@ async def test_gready_cache_decorator(N: int, pgconn: asyncpg.Connection) -> Non
 
 
 @pytest.mark.parametrize("N", (1, 2, 4, 16, 64))
-async def test_gready_cache_decorator_connection_closed(
+async def test_greedy_cache_decorator_connection_closed(
     N: int,
     pgconn: asyncpg.Connection,
 ) -> None:
     listener = listeners.PGEventQueue()
     await listener.connect(
         pgconn,
-        models.PGChannel("test_gready_cache_decorator_connection_closed"),
+        models.PGChannel("test_greedy_cache_decorator_connection_closed"),
     )
     await pgconn.close()
 
-    @decorators.cache(strategy=strategies.Gready(listener=listener))
+    @decorators.cache(strategy=strategies.Greedy(listener=listener))
     async def now() -> datetime.datetime:
         return datetime.datetime.now()
 
@@ -49,17 +49,17 @@ async def test_gready_cache_decorator_connection_closed(
 
 
 @pytest.mark.parametrize("N", (1, 2, 4, 16, 64))
-async def test_gready_cache_decorator_exceptions(
+async def test_greedy_cache_decorator_exceptions(
     N: int,
     pgconn: asyncpg.Connection,
 ) -> None:
     listener = listeners.PGEventQueue()
     await listener.connect(
         pgconn,
-        models.PGChannel("test_gready_cache_decorator_exceptions"),
+        models.PGChannel("test_greedy_cache_decorator_exceptions"),
     )
 
-    @decorators.cache(strategy=strategies.Gready(listener=listener))
+    @decorators.cache(strategy=strategies.Greedy(listener=listener))
     async def raise_runtime_error() -> NoReturn:
         raise RuntimeError
 
@@ -76,7 +76,7 @@ async def test_gready_cache_decorator_exceptions(
 
 
 @pytest.mark.parametrize("N", (1, 2, 4, 16, 64))
-async def test_gready_cache_identity(
+async def test_greedy_cache_identity(
     N: int,
     pgconn: asyncpg.Connection,
 ) -> None:
@@ -84,11 +84,11 @@ async def test_gready_cache_identity(
     listener = listeners.PGEventQueue()
     await listener.connect(
         pgconn,
-        models.PGChannel("test_gready_cache_decorator_exceptions"),
+        models.PGChannel("test_greedy_cache_decorator_exceptions"),
     )
 
     @decorators.cache(
-        strategy=strategies.Gready(listener=listener),
+        strategy=strategies.Greedy(listener=listener),
         statistics_callback=lambda x: statistics.update([x]),
     )
     async def identity(x: int) -> int:
@@ -102,7 +102,7 @@ async def test_gready_cache_identity(
 
 
 @pytest.mark.parametrize("N", (1, 2, 4, 16, 64))
-async def test_gready_cache_sleepy(
+async def test_greedy_cache_sleepy(
     N: int,
     pgconn: asyncpg.Connection,
 ) -> None:
@@ -110,11 +110,11 @@ async def test_gready_cache_sleepy(
     listener = listeners.PGEventQueue()
     await listener.connect(
         pgconn,
-        models.PGChannel("test_gready_cache_decorator_exceptions"),
+        models.PGChannel("test_greedy_cache_decorator_exceptions"),
     )
 
     @decorators.cache(
-        strategy=strategies.Gready(listener=listener),
+        strategy=strategies.Greedy(listener=listener),
         statistics_callback=lambda x: statistics.update([x]),
     )
     async def now() -> datetime.datetime:
