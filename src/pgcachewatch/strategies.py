@@ -60,9 +60,9 @@ class Windowed(Strategy):
     ) -> None:
         super().__init__()
         self._listener = listener
-        self._window = window
         self._settings = settings
-        self._events = collections.deque[models.OPERATIONS](maxlen=len(self._window))
+        self._events = collections.deque[models.OPERATIONS](maxlen=len(window))
+        self._window = collections.deque[models.OPERATIONS](window, maxlen=len(window))
 
     def connection_healthy(self) -> bool:
         return self._listener.connection_healthy()
@@ -73,9 +73,7 @@ class Windowed(Strategy):
             settings=self._settings,
         ):
             self._events.append(current.operation)
-            if len(self._window) == len(self._events) and all(
-                w == e for w, e in zip(self._window, self._events)
-            ):
+            if self._window == self._events:
                 return True
         return False
 
