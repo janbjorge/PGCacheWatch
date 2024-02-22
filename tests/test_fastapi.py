@@ -17,7 +17,7 @@ async def fastapitestapp(
     listener = listeners.PGEventQueue()
     await listener.connect(pgconn, channel)
 
-    @decorators.cache(strategy=strategies.Gready(listener=listener))
+    @decorators.cache(strategy=strategies.Greedy(listener=listener))
     async def slow_db_read() -> dict:
         await asyncio.sleep(0.1)  # sim. a slow db-query.
         return {"now": datetime.datetime.now().isoformat()}

@@ -17,7 +17,7 @@ class Strategy(typing.Protocol):
         raise NotImplementedError
 
 
-class Gready(Strategy):
+class Greedy(Strategy):
     """
     A strategy that clears events based on a predicate until a deadline is reached.
     """

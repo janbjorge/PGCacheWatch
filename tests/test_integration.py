@@ -43,7 +43,7 @@ async def test_2_caching(
     cnt = 0
 
     @decorators.cache(
-        strategy=strategies.Gready(listener=listener),
+        strategy=strategies.Greedy(listener=listener),
         statistics_callback=lambda x: statistics.update([x]),
     )
     async def fetch_sysconf() -> list:
@@ -69,7 +69,7 @@ async def test_3_cache_invalidation_update(
     )
 
     @decorators.cache(
-        strategy=strategies.Gready(listener=listener),
+        strategy=strategies.Greedy(listener=listener),
         statistics_callback=lambda x: statistics.update([x]),
     )
     async def fetch_sysconf() -> list:
@@ -103,7 +103,7 @@ async def test_3_cache_invalidation_insert(
     )
 
     @decorators.cache(
-        strategy=strategies.Gready(listener=listener),
+        strategy=strategies.Greedy(listener=listener),
         statistics_callback=lambda x: statistics.update([x]),
     )
     async def fetch_sysconf() -> list:
@@ -138,7 +138,7 @@ async def test_3_cache_invalidation_delete(
     )
 
     @decorators.cache(
-        strategy=strategies.Gready(listener=listener),
+        strategy=strategies.Greedy(listener=listener),
         statistics_callback=lambda x: statistics.update([x]),
     )
     async def fetch_sysconf() -> list:

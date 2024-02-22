@@ -7,13 +7,13 @@ from pgcachewatch import listeners, models, strategies
 
 
 @pytest.mark.parametrize("N", (4, 16, 64))
-async def test_gready_strategy(N: int, pgconn: asyncpg.Connection) -> None:
-    channel = models.PGChannel("test_gready_strategy")
+async def test_greedy_strategy(N: int, pgconn: asyncpg.Connection) -> None:
+    channel = models.PGChannel("test_greedy_strategy")
 
     listener = listeners.PGEventQueue()
     await listener.connect(pgconn, channel)
 
-    strategy = strategies.Gready(
+    strategy = strategies.Greedy(
         listener=listener,
         predicate=lambda e: e.operation == "insert",
     )
