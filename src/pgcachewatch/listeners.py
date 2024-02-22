@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import json
 import logging
+from typing import Protocol
 
 import asyncpg
 
@@ -13,6 +14,44 @@ def _critical_termination_listener(*_: object, **__: object) -> None:
     # a set of functions to call. This this will now happen once as
     # all instance will point to the same function.
     logging.critical("Connection is closed / terminated.")
+
+
+class EventQueueProtocol(Protocol):
+    """
+    Protocol for an event queue interface.
+
+    Specifies the required methods for an event queue to check the connection health
+    and to retrieve events without waiting. Implementing classes must provide concrete
+    implementations of these methods to ensure compatibility with the event handling
+    system.
+    """
+
+    def connection_healthy(self) -> bool:
+        """
+        Checks if the connection is healthy.
+
+        This method should return True if the connection to the underlying service
+        (e.g., database, message broker) is active and healthy, False otherwise.
+
+        Returns:
+            bool: True if the connection is healthy, False otherwise.
+        """
+        raise NotImplementedError
+
+    def get_nowait(self) -> models.Event:
+        """
+        Retrieves an event from the queue without waiting.
+
+        Attempts to immediately retrieve an event from the queue. If no event is
+        available, this method should raise an appropriate exception (e.g., QueueEmpty).
+
+        Returns:
+            models.Event: The event retrieved from the queue.
+
+        Raises:
+            QueueEmpty: If no event is available in the queue to retrieve.
+        """
+        raise NotImplementedError
 
 
 class PGEventQueue(asyncio.Queue[models.Event]):
@@ -34,7 +73,7 @@ class PGEventQueue(asyncio.Queue[models.Event]):
     async def connect(
         self,
         connection: asyncpg.Connection,
-        channel: models.PGChannel,
+        channel: models.PGChannel = models.PGChannel("ch_pgcachewatch_table_change"),
     ) -> None:
         """
         Asynchronously connects the PGEventQueue to a specified
@@ -104,5 +143,5 @@ class PGEventQueue(asyncio.Queue[models.Event]):
             except Exception:
                 logging.exception("Unable to queue `%s`.", parsed)
 
-    def pg_connection_healthy(self) -> bool:
+    def connection_healthy(self) -> bool:
         return bool(self._pg_connection and not self._pg_connection.is_closed())
