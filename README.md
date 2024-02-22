@@ -92,7 +92,7 @@ async def listen_for_new_users() -> None:
 
     try:
         print("Listening for new user events...")
-        async for event in listener.aiter():
+        while event := await listener.get():
             if event.operation == "insert":
                 await process_new_user_event()
     finally:
