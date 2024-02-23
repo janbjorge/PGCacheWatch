@@ -1,6 +1,6 @@
 import asyncio
 import datetime
-import typing
+from typing import get_args
 
 import asyncpg
 import pytest
@@ -8,7 +8,7 @@ from pgcachewatch import listeners, models, utils
 
 
 @pytest.mark.parametrize("N", (4, 8, 32))
-@pytest.mark.parametrize("operation", typing.get_args(models.OPERATIONS))
+@pytest.mark.parametrize("operation", get_args(models.OPERATIONS))
 async def test_eventqueue_and_pglistner(
     N: int,
     operation: models.OPERATIONS,
