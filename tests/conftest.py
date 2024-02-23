@@ -1,12 +1,12 @@
 import os
-import typing
+from typing import AsyncGenerator
 
 import asyncpg
 import pytest
 
 
 @pytest.fixture(scope="function")
-async def pgconn() -> typing.AsyncGenerator[asyncpg.Connection, None]:
+async def pgconn() -> AsyncGenerator[asyncpg.Connection, None]:
     conn = await asyncpg.connect()
     try:
         yield conn
@@ -15,7 +15,7 @@ async def pgconn() -> typing.AsyncGenerator[asyncpg.Connection, None]:
 
 
 @pytest.fixture(scope="function")
-async def pgpool() -> typing.AsyncGenerator[asyncpg.Pool, None]:
+async def pgpool() -> AsyncGenerator[asyncpg.Pool, None]:
     async with asyncpg.create_pool() as pool:
         yield pool
 

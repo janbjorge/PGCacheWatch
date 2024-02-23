@@ -1,11 +1,11 @@
 import collections
 import datetime
-import typing
+from typing import Callable, Protocol
 
 from . import listeners, models, utils
 
 
-class Strategy(typing.Protocol):
+class Strategy(Protocol):
     """
     A protocol defining the clear method for different strategies.
     """
@@ -26,7 +26,7 @@ class Greedy(Strategy):
         self,
         listener: listeners.EventQueueProtocol,
         settings: models.DeadlineSetting = models.DeadlineSetting(),
-        predicate: typing.Callable[[models.Event], bool] = bool,
+        predicate: Callable[[models.Event], bool] = bool,
     ) -> None:
         super().__init__()
         self._listener = listener

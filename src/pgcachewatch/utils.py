@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import functools
-import typing
+from typing import Generator, Hashable
 
 import asyncpg
 
@@ -9,10 +9,10 @@ from pgcachewatch import listeners, models
 
 
 def make_key(
-    args: tuple[typing.Hashable, ...],
+    args: tuple[Hashable, ...],
     kwds: dict,
     typed: bool = False,
-) -> typing.Hashable:
+) -> Hashable:
     """
     Create a cache key from the given function arguments and keyword arguments.
     """
@@ -36,7 +36,7 @@ async def emit_event(
 def pick_until_deadline(
     queue: listeners.EventQueueProtocol,
     settings: models.DeadlineSetting,
-) -> typing.Iterator[models.Event]:
+) -> Generator[models.Event, None, None]:
     """
     Yield events from the queue until the deadline is reached or queue is empty.
     """

@@ -1,15 +1,15 @@
 import datetime
-import typing
+from typing import Literal, NewType
 
 import pydantic
 
-OPERATIONS = typing.Literal[
+OPERATIONS = Literal[
     "insert",
     "update",
     "delete",
 ]
 
-PGChannel = typing.NewType(
+PGChannel = NewType(
     "PGChannel",
     str,
 )
