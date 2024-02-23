@@ -1,19 +1,19 @@
 import asyncio
 import datetime
 import json
-import logging
 from typing import Protocol
 
 import asyncpg
 
 from . import models
+from .logconfig import logger
 
 
 def _critical_termination_listener(*_: object, **__: object) -> None:
     # Must be defined in the global namespace, as ayncpg keeps
     # a set of functions to call. This this will now happen once as
     # all instance will point to the same function.
-    logging.critical("Connection is closed / terminated.")
+    logger.critical("Connection is closed / terminated.")
 
 
 class EventQueueProtocol(Protocol):
@@ -133,15 +133,15 @@ class PGEventQueue(asyncio.Queue[models.Event]):
                 json.loads(payload) | {"channel": channel}
             )
         except Exception:
-            logging.exception("Unable to parse `%s`.", payload)
+            logger.exception("Unable to parse `%s`.", payload)
         else:
             if parsed.latency > self._max_latency:
-                logging.warning("Latency for %s above %s.", parsed, self._max_latency)
-            logging.info("Received event: %s on %s", parsed, channel)
+                logger.warning("Latency for %s above %s.", parsed, self._max_latency)
+            logger.info("Received event: %s on %s", parsed, channel)
             try:
                 self.put_nowait(parsed)
             except Exception:
-                logging.exception("Unable to queue `%s`.", parsed)
+                logger.exception("Unable to queue `%s`.", parsed)
 
     def connection_healthy(self) -> bool:
         return bool(self._pg_connection and not self._pg_connection.is_closed())
