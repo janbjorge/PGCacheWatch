@@ -4,13 +4,33 @@
 [![downloads](https://static.pepy.tech/badge/PGCacheWatch/month)](https://pepy.tech/project/PGCacheWatch)
 [![versions](https://img.shields.io/pypi/pyversions/PGCacheWatch.svg)](https://github.com/janbjorge/PGCacheWatch)
 
-PGCacheWatch is a Python library crafted to empower applications with real-time PostgreSQL event notifications for efficient cache invalidation, directly leveraging existing PostgreSQL infrastructure. This approach eliminates the need for additional technologies for cache management, simplifying your stack while enhancing performance and real-time data consistency.
+PGCacheWatch is a Python library that enhances applications with real-time PostgreSQL event notifications, enabling efficient cache invalidation. It leverages the existing PostgreSQL infrastructure to simplify cache management while ensuring performance and data consistency.
 
-## Key Advantages
-- **Leverage Existing Infrastructure**: Utilizes PostgreSQL's native NOTIFY/LISTEN capabilities for event-driven cache invalidation, avoiding the overhead of integrating external caching systems.
-- **Asynchronous and Efficient**: Built on top of `asyncpg` for asynchronous database communication, ensuring non-blocking I/O operations and optimal performance.
-- **Flexible Cache Invalidation Strategies**: Offers a variety of strategies (e.g., Greedy, Windowed, Timed) for nuanced cache invalidation control, tailored to different application needs.
-- **Simple Yet Powerful API**: Designed with simplicity in mind, offering a straightforward setup process and an intuitive API for managing cache invalidation logic.
+## Key Features
+- Real-Time Notifications: Utilize PostgreSQL's NOTIFY/LISTEN for immediate cache updates.
+- Asynchronous Operations: Built on asyncpg for non-blocking database communication.
+- Flexible Invalidation Strategies: Offers strategies like Greedy, Windowed, Timed for precise control.
+- Easy Integration: Simple setup with an intuitive API for managing cache logic.
+
+## Cache Invalidation Strategies
+PGCacheWatch supports multiple strategies for cache invalidation, designed to suit various application needs.
+
+- **Greedy**: Instantly invalidates cache on any related database change. Ideal for applications requiring the utmost data freshness.
+- **Windowed**: Aggregates database changes over a set period or event count before invalidating the cache. This strategy strikes a balance between performance and data freshness, suitable for applications where slight data staleness is acceptable.
+- **Timed**: Invalidates cache at fixed time intervals, regardless of database activity. Best for applications with predictable data access patterns, optimizing cache management while accommodating minor delays in data updates.
+
+Selecting the right strategy depends on your specific requirements for data freshness and system performance.
+
+## CLI Tool for NOTIFY Triggers
+
+PGCacheWatch includes a Command Line Interface (CLI) tool designed to streamline the setup of NOTIFY triggers and functions within your PostgreSQL database:
+
+- **CLI Tool**: Simplifies the creation and management of triggers and functions for the LISTEN/NOTIFY mechanism. This tool abstracts the complexity of script management, facilitating the integration of PGCacheWatch.
+- **Notify Triggers and Functions**: The CLI automates the application of PostgreSQL functions and triggers that emit NOTIFY signals for specified database events. This ensures PGCacheWatch is promptly informed of changes impacting the cache.
+- **Usage**: Executing a command such as `pgcachewatch install <tables-to-cache>` installs all necessary components to begin listening for database modifications and efficiently manage cache invalidation.
+- **Advantages**: Leveraging the CLI tool enables developers to quickly deploy real-time cache invalidation capabilities in their applications, bypassing the intricacies of manual PostgreSQL configuration. This approach not only conserves development resources but also minimizes the risk of setup errors.
+
+The CLI tool offers a straightforward method for implementing robust cache invalidation logic, capitalizing on the advanced features of PostgreSQL's NOTIFY/LISTEN without the need for extensive configuration.
 
 ## Installation
 To install PGCacheWatch, run the following command in your terminal:
@@ -18,26 +38,14 @@ To install PGCacheWatch, run the following command in your terminal:
 pip install pgcachewatch
 ```
 
-## Using PGCacheWatch
-### Setting Up
-Initialize PostgreSQL triggers to emit NOTIFY events on data changes. PGCacheWatch provides utility scripts for easy trigger setup
+## Setting Up
+Install PGCacheWatch and initialize PostgreSQL triggers to emit NOTIFY events on data changes.
 ```bash
 pgcachewatch install <tables-to-cache>
 ```
 
-## Automating User Data Enrichment with PGCacheWatch and Asyncio
-
-In the era of data-driven applications, keeping user information comprehensive and up-to-date is paramount. However, the challenge often lies in efficiently updating user profiles with additional information fetched from external sources, especially in response to new user registrations. This process can significantly benefit from automation, ensuring that every new user's data is enriched without manual intervention.
-
-The following Python example leverages `PGCacheWatch` in conjunction with `asyncio` and `asyncpg` to automate the enrichment of new user data in a PostgreSQL database. By listening for new user events, the application fetches additional information asynchronously from simulated external REST APIs and updates the user's record. This seamless integration not only enhances data quality but also optimizes backend workflows by reducing the need for constant database polling.
-
-### What This Example Covers
-
-- **Listening for New User Registrations**: Utilizing `PGCacheWatch` to listen for new user events in a PostgreSQL database, triggering data enrichment processes.
-- **Fetching Additional Information**: Simulating asynchronous calls to external REST APIs to fetch additional information for newly registered users.
-- **Updating User Profiles**: Demonstrating how to update user records in the database with the fetched information, completing the data enrichment cycle.
-
-This guide is intended for developers seeking to automate data enrichment processes in their applications, particularly those using PostgreSQL for data management. The example provides a practical approach to integrating real-time event handling with asynchronous programming for efficient data updates.
+## Automating User Data Enrichment
+This example demonstrates how to use PGCacheWatch with asyncio and asyncpg for real-time user data enrichment upon new registrations.
 
 ```python
 import asyncio
@@ -102,16 +110,8 @@ if __name__ == "__main__":
     asyncio.run(listen_for_new_users())
 ```
 
-## Integrating PGCacheWatch with FastAPI for Dynamic Cache Invalidation
-In modern web applications, maintaining data consistency while ensuring high performance can be a significant challenge. Caching is a common strategy to enhance performance, but it introduces complexity when it comes to invalidating cached data upon updates. `PGCacheWatch` offers a robust solution by leveraging PostgreSQL's NOTIFY/LISTEN features to invalidate cache entries in real-time, ensuring your application's data remains fresh and consistent.
-
-This example demonstrates how to integrate `PGCacheWatch` with FastAPI, a popular asynchronous web framework, to create an efficient and responsive web application. By combining FastAPI's scalability with `PGCacheWatch`'s real-time cache invalidation capabilities, developers can build applications that automatically update cached data upon changes in the database, minimizing latency and improving user experience.
-
-### What You'll Learn
-
-- **Setting Up `PGCacheWatch` with FastAPI**: How to configure `PGCacheWatch` to work within the FastAPI application lifecycle, including database connection setup and teardown.
-- **Implementing Cache Invalidation Strategies**: Utilizing `PGCacheWatch`'s decorators and strategies to invalidate cached data based on database events, specifically focusing on updates.
-- **Creating Responsive Endpoints**: Building FastAPI routes that serve dynamically updated data, ensuring that the information presented to the user is always up-to-date.
+## Integrating PGCacheWatch with FastAPI
+This example illustrates the integration of PGCacheWatch with FastAPI to dynamically invalidate cache following database changes, thus maintaining the freshness and consistency of your application's data.
 
 ```python
 import contextlib
