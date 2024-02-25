@@ -6,7 +6,6 @@ Welcome to PGCacheWatch's documentation!
    :width: 500
    :align: center
 
-
 PGCacheWatch is a Python library that enhances applications with real-time PostgreSQL event notifications, enabling efficient cache invalidation. It leverages the existing PostgreSQL infrastructure to simplify cache management while ensuring performance and data consistency.
 
 .. toctree::
@@ -17,3 +16,4 @@ PGCacheWatch is a Python library that enhances applications with real-time Postg
    setup
    configuration
    strategies
+   examples
