@@ -50,6 +50,11 @@ dev = [
     "pytest",
     "ruff",
 ]
+docs = [
+    "myst-parser",
+    "sphinx",
+    "sphinx-rtd-theme",
+]
 
 [tool.setuptools_scm]
 write_to = "src/pgcachewatch/_version.py"
@@ -75,7 +80,7 @@ combine-as-imports = true
 
 [tool.mypy]
 disallow_untyped_defs = true
-exclude = "^(build)"
+exclude = "^(build|docs)"
 extra_checks = true
 ignore_missing_imports = true
 plugins = ["pydantic.mypy"]
