@@ -134,3 +134,4 @@ dmypy.json
 
 # Dynamic version
 src/pgcachewatch/_version.py
+.DS_Store

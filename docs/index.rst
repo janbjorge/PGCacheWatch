@@ -1,20 +1,19 @@
-.. PGCacheWatch documentation master file, created by
-   sphinx-quickstart on Sun Feb 25 15:34:56 2024.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to PGCacheWatch's documentation!
 ========================================
 
+.. figure:: logo.webp
+   :alt: Logo
+   :width: 500
+   :align: center
+
+
+PGCacheWatch is a Python library that enhances applications with real-time PostgreSQL event notifications, enabling efficient cache invalidation. It leverages the existing PostgreSQL infrastructure to simplify cache management while ensuring performance and data consistency.
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   introduction
+   setup
+   configuration
+   strategies

@@ -1,10 +1,8 @@
-Introduction
-============
+# Introduction
 
 PGCacheWatch is a Python library designed to enhance applications by providing real-time PostgreSQL event notifications, facilitating efficient cache invalidation. It leverages PostgreSQL's existing NOTIFY/LISTEN infrastructure to simplify cache management, ensuring both high performance and data consistency. This document serves as an introduction to PGCacheWatch, covering key features, cache invalidation strategies, and the setup process.
 
-Interaction with PostgreSQL via LISTEN/NOTIFY
-=============================================
+## Interaction with PostgreSQL via LISTEN/NOTIFY
 
 PGCacheWatch utilizes PostgreSQL's LISTEN/NOTIFY mechanism to receive real-time notifications of database changes, enabling applications to invalidate cached data promptly and efficiently. This process involves the following steps:
 
@@ -16,21 +14,21 @@ PGCacheWatch utilizes PostgreSQL's LISTEN/NOTIFY mechanism to receive real-time 
 
 4. **Cache Invalidation Strategies**: Depending on the application's requirements, different strategies can be employed to invalidate the cache. These strategies (Greedy, Windowed, Timed) offer varying trade-offs between immediacy and performance, allowing developers to choose the most appropriate approach based on their specific needs.
 
-Example Usage
-=============
+## Example Usage
 
 The following example demonstrates how to set up a PostgreSQL event queue in PGCacheWatch, connect to a PostgreSQL channel, and listen for events:
 
 ```python
 import asyncio
 import asyncpg
+
 from pgcachewatch.listeners import PGEventQueue
 from pgcachewatch.models import PGChannel
 
 async def main():
     conn = await asyncpg.connect(dsn='postgres://user:password@localhost/dbname')
     event_queue = PGEventQueue()
-    await event_queue.connect(conn, PGChannel('your_channel_name'))
+    await event_queue.connect(conn)
 
     try:
         print('Listening for events...')
