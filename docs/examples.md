@@ -72,5 +72,3 @@ async def cached_query() -> dict[str, str]:
 async def get_data() -> dict:
     return await cached_query()
 ```
-
-These examples illustrate the power and flexibility of PGCacheWatch in addressing real-world problems in modern web development, streamlining processes, and enhancing data integrity and application performance.
