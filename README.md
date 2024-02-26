@@ -46,7 +46,7 @@ APP = FastAPI(lifespan=app_setup_teardown)
         predicate=lambda x: x.operation == "update",
     )
 )
-async def cached_query() -> dict[str, str]:
+async def cached_query(user_id: int) -> dict[str, str]:
     """
     Simulates a database query that benefits from cache invalidation.
 
@@ -59,11 +59,11 @@ async def cached_query() -> dict[str, str]:
 
 # Define a FastAPI route to fetch data, utilizing the cached_query function.
 @APP.get("/data")
-async def get_data() -> dict:
+async def get_data(user_id: int) -> dict:
     """
     This endpoint uses the cached_query function to return data, demonstrating
     how cache invalidation can be integrated into a web application route.
     """
     # Fetch and return the data using the cached query function.
-    return await cached_query()
+    return await cached_query(user_id)
 ```

@@ -65,10 +65,10 @@ async def app_setup_teardown(_: FastAPI) -> typing.AsyncGenerator[None, None]:
 APP = FastAPI(lifespan=app_setup_teardown)
 
 @decorators.cache(strategy=strategies.Greedy(listener=listener, predicate=lambda x: x.operation == "update"))
-async def cached_query() -> dict[str, str]:
+async def cached_query(user_id: int) -> dict[str, str]:
     return {"data": "query result"}
 
 @APP.get("/data")
-async def get_data() -> dict:
-    return await cached_query()
+async def get_data(user_id: int) -> dict:
+    return await cached_query(user_id)
 ```
