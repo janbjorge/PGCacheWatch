@@ -4,6 +4,15 @@
 [![downloads](https://static.pepy.tech/badge/PGCacheWatch/month)](https://pepy.tech/project/PGCacheWatch)
 [![versions](https://img.shields.io/pypi/pyversions/PGCacheWatch.svg)](https://github.com/janbjorge/PGCacheWatch)
 
+
+---
+
+**Documentation**: <a href="https://pgcachewatch.readthedocs.io/en/latest/" target="_blank">https://pgcachewatch.readthedocs.io/en/latest/</a>
+
+**Source Code**: <a href="https://github.com/janbjorge/PGCacheWatch/" target="_blank">https://github.com/janbjorge/PGCacheWatch/</a>
+
+---
+
 PGCacheWatch is a Python library that enhances applications with real-time PostgreSQL event notifications, enabling efficient cache invalidation. It leverages the existing PostgreSQL infrastructure to simplify cache management while ensuring performance and data consistency.
 
 ## Example with FastAPI
