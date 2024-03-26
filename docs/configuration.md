@@ -1,30 +1,6 @@
 # Configuration
 Configuring PGCacheWatch for optimal operation with PostgreSQL involves careful consideration of how you establish and manage your database connections, particularly when using asyncpg for asynchronous communication. Here's a refined approach to configuration, taking into account the nuances of connection pooling, listener persistence, and environmental configuration options.
 
-### Database Connection Configuration
-
-asyncpg offers versatile methods for configuring database connections, including environment variables, connection strings, and direct parameter specification. Here’s how to leverage these methods:
-
-### Environment Variables:
-asyncpg supports setting connection parameters through environment variables, which can simplify configuration management, especially in containerized or cloud environments.
-
-```shell
-   PGUSER=dbuser
-   PGPASSWORD=dbpass
-   PGHOST=localhost
-   PGPORT=5432
-   PGDATABASE=mydatabase
-```
-
-With these environment variables set, you can initiate a connection in asyncpg without explicitly specifying connection details:
-
-```python
-   conn = await asyncpg.connect()
-```
-
-### Connection Strings and Direct Parameters:
-You can specify the database connection details either through a DSN string or by passing parameters directly to the `connect` function, as previously described.
-
 ### Using Connection Pools with PGCacheWatch
 
 While asyncpg’s connection pooling is a powerful feature for managing database connections efficiently, it requires careful handling when used with LISTEN/NOTIFY channels due to the nature of persistent listeners.
