@@ -1,9 +1,10 @@
 import asyncio
 import datetime
 import json
-from typing import Protocol
+from typing import Callable, Protocol
 
 import asyncpg
+import websockets
 
 from . import models
 from .logconfig import logger
@@ -14,6 +15,71 @@ def _critical_termination_listener(*_: object, **__: object) -> None:
     # a set of functions to call. This this will now happen once as
     # all instance will point to the same function.
     logger.critical("Connection is closed / terminated.")
+
+
+def create_event_inserter(
+    queue: asyncio.Queue[models.Event],
+    max_latency: datetime.timedelta,
+) -> Callable[
+    [
+        models.PGChannel,
+        str | bytes | bytearray,
+    ],
+    None,
+]:
+    """
+    Creates a callable that parses JSON payloads into `models.Event`
+    objects and inserts them into a queue. If the event's latency
+    exceeds the specified maximum, it logs a warning. Errors during
+    parsing or inserting are logged as exceptions.
+    """
+
+    def parse_and_insert(
+        channel: models.PGChannel,
+        payload: str | bytes | bytearray,
+    ) -> None:
+        """
+        Parses a JSON payload and inserts it into the queue as an `models.Event` object.
+        """
+        try:
+            event_data = json.loads(payload)
+
+            # Add or overwrite channel key with the current channel
+            event_data["channel"] = channel
+
+            parsed_event = models.Event.model_validate(event_data)
+
+        except Exception:
+            logger.exception(
+                "Failed to parse payload: `%s`.",
+                payload,
+            )
+            return
+
+        if parsed_event.latency > max_latency:
+            logger.warning(
+                "Event latency (%s) exceeds maximum (%s): `%s` from `%s`.",
+                parsed_event.latency,
+                max_latency,
+                parsed_event,
+                channel,
+            )
+        else:
+            logger.info(
+                "Inserting event into queue: `%s` from `%s`.",
+                parsed_event,
+                channel,
+            )
+
+        try:
+            queue.put_nowait(parsed_event)
+        except Exception:
+            logger.exception(
+                "Unexpected error inserting event into queue: `%s`.",
+                parsed_event,
+            )
+
+    return parse_and_insert
 
 
 class EventQueueProtocol(Protocol):
@@ -114,34 +180,54 @@ class PGEventQueue(asyncio.Queue[models.Event]):
         self._pg_channel = channel
         self._pg_connection = connection
         self._pg_connection.add_termination_listener(_critical_termination_listener)
-        await self._pg_connection.add_listener(self._pg_channel, self.parse_and_put)  # type: ignore[arg-type]
 
-    def parse_and_put(
-        self,
-        connection: asyncpg.Connection,
-        pid: int,
-        channel: str,
-        payload: str,
-    ) -> None:
-        """
-        Parses a given payload and puts it into a queue. If the latency requirement is
-        not met, logs a warning but still adds the event to the queue.
-        If parsing or queuing fails, logs the exception.
-        """
-        try:
-            parsed = models.Event.model_validate(
-                json.loads(payload) | {"channel": channel}
-            )
-        except Exception:
-            logger.exception("Unable to parse `%s`.", payload)
-        else:
-            if parsed.latency > self._max_latency:
-                logger.warning("Latency for %s above %s.", parsed, self._max_latency)
-            logger.info("Received event: %s on %s", parsed, channel)
-            try:
-                self.put_nowait(parsed)
-            except Exception:
-                logger.exception("Unable to queue `%s`.", parsed)
+        event_handler = create_event_inserter(self, self._max_latency)
+        await self._pg_connection.add_listener(
+            self._pg_channel,
+            lambda *x: event_handler(self._pg_channel, x[-1]),
+        )
 
     def connection_healthy(self) -> bool:
         return bool(self._pg_connection and not self._pg_connection.is_closed())
+
+
+class WSEventQueue(asyncio.Queue[models.Event]):
+    def __init__(
+        self,
+        max_size: int = 0,
+        max_latency: datetime.timedelta = datetime.timedelta(milliseconds=500),
+    ) -> None:
+        super().__init__(maxsize=max_size)
+        self._max_latency = max_latency
+        self._handler_task: asyncio.Task | None = None
+        self._ws: websockets.WebSocketClientProtocol | None = None
+
+    async def connect(
+        self,
+        ws: websockets.WebSocketClientProtocol,
+        channel: models.PGChannel = models.PGChannel("ch_pgcachewatch_table_change"),
+    ) -> None:
+        async def _handler(ws: websockets.WebSocketClientProtocol) -> None:
+            event_handler = create_event_inserter(self, self._max_latency)
+            while True:
+                try:
+                    event_handler(self._pg_channel, await ws.recv())
+                except websockets.ConnectionClosedOK:
+                    break
+
+        if self._handler_task is not None:
+            raise RuntimeError(
+                "WSEventQueue instance is already connected to a channel and/or "
+                "connection. Only supports one channel and connection per "
+                "WSEventQueue instance."
+            )
+
+        self._ws = ws
+        self._pg_channel = channel
+        self._handler_task = asyncio.create_task(_handler(ws))
+        self._handler_task.add_done_callback(_critical_termination_listener)
+
+    def connection_healthy(self) -> bool:
+        task_ok = bool(self._handler_task and not self._handler_task.done())
+        ws_ok = bool(self._ws and not self._ws.closed)
+        return task_ok and ws_ok

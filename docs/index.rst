@@ -18,4 +18,5 @@ The repository is hosted on `github <https://github.com/janbjorge/PGCacheWatch>`
    setup
    configuration
    strategies
+   pgb
    examples
