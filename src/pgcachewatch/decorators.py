@@ -1,9 +1,10 @@
 import asyncio
+from functools import _make_key as make_key
 from typing import Awaitable, Callable, Hashable, Literal, TypeVar
 
 from typing_extensions import ParamSpec
 
-from pgcachewatch import strategies, utils
+from pgcachewatch import strategies
 from pgcachewatch.logconfig import logger
 
 P = ParamSpec("P")
@@ -12,7 +13,7 @@ T = TypeVar("T")
 
 def cache(
     strategy: strategies.Strategy,
-    statistics_callback: Callable[[Literal["hit", "miss"]], None] | None = None,
+    statistics_callback: Callable[[Literal["hit", "miss"]], None] = lambda _: None,
 ) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Awaitable[T]]]:
     def outer(fn: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
         cached = dict[Hashable, asyncio.Future[T]]()
@@ -29,23 +30,19 @@ def cache(
                 logger.debug("Cache clear")
                 cached.clear()
 
-            key = utils.make_key(args, kwargs)
+            key = make_key(args, kwargs, typed=False)
 
             try:
                 waiter = cached[key]
             except KeyError:
                 # Cache miss
-                ...
+                logger.debug("Cache miss")
+                statistics_callback("miss")
             else:
                 # Cache hit
                 logger.debug("Cache hit")
-                if statistics_callback:
-                    statistics_callback("hit")
+                statistics_callback("hit")
                 return await waiter
-
-            logger.debug("Cache miss")
-            if statistics_callback:
-                statistics_callback("miss")
 
             # Initialize Future to prevent cache stampedes.
             cached[key] = waiter = asyncio.Future[T]()

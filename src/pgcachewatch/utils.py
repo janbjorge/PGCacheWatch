@@ -1,22 +1,10 @@
 import asyncio
 import datetime
-import functools
-from typing import Generator, Hashable
+from typing import Generator
 
 import asyncpg
 
 from pgcachewatch import listeners, models
-
-
-def make_key(
-    args: tuple[Hashable, ...],
-    kwds: dict,
-    typed: bool = False,
-) -> Hashable:
-    """
-    Create a cache key from the given function arguments and keyword arguments.
-    """
-    return functools._make_key(args, kwds, typed)
 
 
 async def emit_event(
