@@ -4,7 +4,7 @@ import datetime
 
 import asyncpg
 import pytest
-from pgcachewatch import cli, decorators, listeners, models, strategies
+from pgcachewatch import cli, decorators, listeners, strategies
 
 
 def utcnow() -> datetime.datetime:
@@ -38,7 +38,7 @@ async def test_2_caching(
 ) -> None:
     statistics = collections.Counter[str]()
     listener = listeners.PGEventQueue()
-    await listener.connect(pgconn, models.PGChannel("ch_pgcachewatch_table_change"))
+    await listener.connect(pgconn)
 
     cnt = 0
 
@@ -52,6 +52,10 @@ async def test_2_caching(
         return await pgpool.fetch("SELECT * FROM sysconf")
 
     await asyncio.gather(*[fetch_sysconf() for _ in range(N)])
+
+    # Give a bit of leeway due IO network io.
+    await asyncio.sleep(0.1)
+
     assert cnt == 1
     assert statistics["miss"] == 1
     assert statistics["hit"] == N - 1
@@ -63,10 +67,7 @@ async def test_3_cache_invalidation_update(
 ) -> None:
     statistics = collections.Counter[str]()
     listener = listeners.PGEventQueue()
-    await listener.connect(
-        pgconn,
-        models.PGChannel("ch_pgcachewatch_table_change"),
-    )
+    await listener.connect(pgconn)
 
     @decorators.cache(
         strategy=strategies.Greedy(listener=listener),
@@ -97,10 +98,7 @@ async def test_3_cache_invalidation_insert(
 ) -> None:
     statistics = collections.Counter[str]()
     listener = listeners.PGEventQueue()
-    await listener.connect(
-        pgconn,
-        models.PGChannel("ch_pgcachewatch_table_change"),
-    )
+    await listener.connect(pgconn)
 
     @decorators.cache(
         strategy=strategies.Greedy(listener=listener),
@@ -132,10 +130,7 @@ async def test_3_cache_invalidation_delete(
 ) -> None:
     statistics = collections.Counter[str]()
     listener = listeners.PGEventQueue()
-    await listener.connect(
-        pgconn,
-        models.PGChannel("ch_pgcachewatch_table_change"),
-    )
+    await listener.connect(pgconn)
 
     @decorators.cache(
         strategy=strategies.Greedy(listener=listener),

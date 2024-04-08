@@ -34,6 +34,9 @@ async def test_emit_event(
         ]
     )
 
+    # Give a bit of leeway due IO network io.
+    await asyncio.sleep(0.1)
+
     assert listener.qsize() == N
     events = [listener.get_nowait() for _ in range(N)]
     assert len(events) == N
