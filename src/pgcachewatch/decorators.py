@@ -15,6 +15,30 @@ def cache(
     strategy: strategies.Strategy,
     statistics_callback: Callable[[Literal["hit", "miss"]], None] = lambda _: None,
 ) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Awaitable[T]]]:
+    """
+    Decorator for caching asynchronous function calls based on provided
+    caching strategy.
+
+    This decorator leverages an asynchronous caching strategy to manage cache
+    entries and ensure efficient data retrieval. The cache is keyed by the
+    function's arguments, with support for both positional and keyword arguments.
+    It provides mechanisms for cache invalidation and supports concurrent access by
+    utilizing asyncio.Future for pending results, effectively preventing cache
+    stampedes.
+
+    The decorator ensures that:
+    - If the connection is unhealthy, caching is bypassed, and the
+        function is executed directly.
+    - The cache is cleared based on signals from the caching
+        strategy, indicating data invalidation needs.
+    - Cache entries are created or retrieved based on the unique call
+        signature of the decorated function.
+    - Cache hits and misses are logged and can trigger custom actions
+        via the statistics_callback.
+
+    Note: This decorator is intended for use with asynchronous functions.
+    """
+
     def outer(fn: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
         cached = dict[Hashable, asyncio.Future[T]]()
 
