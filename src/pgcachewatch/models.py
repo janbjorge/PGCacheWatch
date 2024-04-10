@@ -7,6 +7,7 @@ OPERATIONS = Literal[
     "insert",
     "update",
     "delete",
+    "truncate",
 ]
 
 PGChannel = NewType(
