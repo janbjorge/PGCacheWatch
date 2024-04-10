@@ -3,7 +3,7 @@ def create_notify_function(
     function_name: str,
 ) -> str:
     return f"""
-CREATE OR REPLACE FUNCTION {function_name}_{channel_name}() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION {function_name}() RETURNS TRIGGER AS $$
   BEGIN
     PERFORM pg_notify(
       '{channel_name}',
@@ -19,15 +19,14 @@ CREATE OR REPLACE FUNCTION {function_name}_{channel_name}() RETURNS TRIGGER AS $
 
 
 def create_after_change_trigger(
+    trigger_name: str,
     table_name: str,
-    channel_name: str,
     function_name: str,
-    trigger_name_prefix: str,
 ) -> str:
     return f"""
-CREATE OR REPLACE TRIGGER {trigger_name_prefix}{table_name}
+CREATE OR REPLACE TRIGGER {trigger_name}
   AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON {table_name}
-  EXECUTE FUNCTION {function_name}_{channel_name}();
+  EXECUTE FUNCTION {function_name}();
 """
 
 

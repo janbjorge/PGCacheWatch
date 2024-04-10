@@ -15,6 +15,8 @@ PGChannel = NewType(
     str,
 )
 
+DEFAULT_PG_CHANNE = PGChannel("ch_pgcachewatch_table_change")
+
 
 class DeadlineSetting(pydantic.BaseModel):
     """

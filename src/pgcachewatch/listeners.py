@@ -139,7 +139,7 @@ class PGEventQueue(asyncio.Queue[models.Event]):
     async def connect(
         self,
         connection: asyncpg.Connection,
-        channel: models.PGChannel = models.PGChannel("ch_pgcachewatch_table_change"),
+        channel: models.PGChannel = models.DEFAULT_PG_CHANNE,
     ) -> None:
         """
         Asynchronously connects the PGEventQueue to a specified
@@ -205,7 +205,7 @@ class WSEventQueue(asyncio.Queue[models.Event]):
     async def connect(
         self,
         ws: websockets.WebSocketClientProtocol,
-        channel: models.PGChannel = models.PGChannel("ch_pgcachewatch_table_change"),
+        channel: models.PGChannel = models.DEFAULT_PG_CHANNE,
     ) -> None:
         async def _handler(ws: websockets.WebSocketClientProtocol) -> None:
             event_handler = create_event_inserter(self, self._max_latency)
