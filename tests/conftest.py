@@ -14,7 +14,7 @@ def pgb_address() -> str:
     return "127.0.0.1:8000"
 
 
-async def pg_bouncer_isup() -> bool:
+async def pg_event_distributor_isup() -> bool:
     timeout = timedelta(seconds=1)
     deadline = datetime.now() + timeout
 
@@ -61,13 +61,13 @@ def set_pg_envs(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(scope="function")
-async def pgbapp() -> AsyncGenerator[Popen, None]:
+async def pgedapp() -> AsyncGenerator[Popen, None]:
     with Popen(
-        "uvicorn pgcachewatch.pg_bouncer:main --factory".split(),
+        "uvicorn pgcachewatch.pg_event_distributor:main --factory".split(),
         stderr=PIPE,
         stdout=PIPE,
     ) as p:
-        await pg_bouncer_isup()
+        await pg_event_distributor_isup()
         try:
             yield p
         finally:

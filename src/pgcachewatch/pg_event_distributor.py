@@ -4,7 +4,7 @@ a single connection. Reduces PostgreSQL server load by sharing one connection
 among multiple clients
 
 Usage example:
-`uvicorn pgcachewatch.pg_bouncer:main --factory`
+`uvicorn pgcachewatch.pg_event_distributor:main --factory`
 """
 
 import asyncio

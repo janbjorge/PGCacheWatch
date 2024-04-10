@@ -6,18 +6,18 @@ from typing import get_args
 import asyncpg
 import pytest
 import websockets
-from conftest import pg_bouncer_isup, pgb_address
+from conftest import pg_event_distributor_isup, pgb_address
 from pgcachewatch import listeners, models, utils
 
 
-async def test_up_endpoint(pgbapp: Popen) -> None:
-    assert await pg_bouncer_isup()
+async def test_up_endpoint(pgedapp: Popen) -> None:
+    assert await pg_event_distributor_isup()
 
 
 @pytest.mark.parametrize("operation", get_args(models.OPERATIONS))
 @pytest.mark.parametrize("N", (1, 8))
 async def test_ws_broadcast(
-    pgbapp: Popen,
+    pgedapp: Popen,
     N: int,
     pgpool: asyncpg.Pool,
     operation: models.OPERATIONS,
@@ -99,7 +99,7 @@ async def test_put_ws_event_queue(
 @pytest.mark.parametrize("operation", get_args(models.OPERATIONS))
 @pytest.mark.parametrize("N", (1, 64))
 async def test_put_on_event_ws_event_queue(
-    pgbapp: Popen,
+    pgedapp: Popen,
     N: int,
     pgpool: asyncpg.Pool,
     operation: models.OPERATIONS,
@@ -133,7 +133,7 @@ async def test_put_on_event_ws_event_queue(
 
 
 async def test_ws_event_queue_connection_healthy(
-    pgbapp: Popen,
+    pgedapp: Popen,
     channel: models.PGChannel = models.PGChannel(
         "test_ws_event_queue_connection_healthy"
     ),

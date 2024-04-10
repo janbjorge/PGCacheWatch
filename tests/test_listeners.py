@@ -48,7 +48,7 @@ async def test_eventqueue_and_pglistner(
 @pytest.mark.parametrize("N", (1, 8, 32))
 @pytest.mark.parametrize("operation", get_args(models.OPERATIONS))
 async def test_eventqueue_and_wslistner(
-    pgbapp: Popen,
+    pgedapp: Popen,
     N: int,
     operation: models.OPERATIONS,
     pgpool: asyncpg.Pool,
