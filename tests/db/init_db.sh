@@ -2,12 +2,12 @@
 set -e
 
 # Create the testdb database
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+psql -v ON_ERROR_STOP=1 <<-EOSQL
     CREATE DATABASE testdb;
 EOSQL
 
 # Connect to testdb and set up the sysconf table
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname testdb <<-EOSQL
+psql -v ON_ERROR_STOP=1 --dbname testdb <<-EOSQL
     CREATE TABLE sysconf (
         key VARCHAR(255) PRIMARY KEY,
         value TEXT NOT NULL

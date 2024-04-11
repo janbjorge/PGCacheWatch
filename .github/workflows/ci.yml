@@ -7,58 +7,21 @@ on:
     branches: [main]
 
 jobs:
-
-  build-and-push:
-    strategy:
-      fail-fast: false
-      matrix:
-        postgres-version: ["14", "15", "16"]
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        run: |
-          docker build \
-            --build-arg POSTGRES_VERSION=${{ matrix.postgres-version }} \
-            -t ghcr.io/janbjorge/pgcachewatchtestdb${{ matrix.postgres-version }}:latest \
-            tests/db/
-          docker push ghcr.io/janbjorge/pgcachewatchtestdb${{ matrix.postgres-version }}:latest
-
   ci:
-    needs: build-and-push
-    services:
-      postgres:
-        image: ghcr.io/janbjorge/pgcachewatchtestdb${{ matrix.postgres-version }}:latest
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-        postgres-version: ["14", "15", "16"]
+        # python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.12"]
+        # postgres-version: ["14", "15", "16"]
+        # postgres-version: ["16"]
         # os: ["ubuntu-latest"]
-        os: ["ubuntu-latest", "windows-latest"]
-        # os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
 
-    name: PY ${{ matrix.python-version }} on ${{ matrix.os }} using PG ${{ matrix.postgres-version }}
+    name: PY ${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
@@ -67,6 +30,20 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+
+      - uses: ikalnytskyi/action-setup-postgres@v5
+        with:
+          username: testuser
+          password: testpassword
+          port: 5432
+
+      - name: Populate DB
+        shell: bash
+        run: |
+          PGUSER=testuser \
+          PGPASSWORD=testpassword \
+          PGHOST=127.0.0.1 \
+          ./tests/db/init_db.sh
 
       - name: Install pgcachewatch
         shell: bash
