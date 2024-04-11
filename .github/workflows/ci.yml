@@ -7,13 +7,55 @@ on:
     branches: [main]
 
 jobs:
+
+  build-and-push:
+    strategy:
+      fail-fast: false
+      matrix:
+        postgres-version: ["14", "15", "16"]
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build \
+            --build-arg POSTGRES_VERSION=${{ matrix.postgres-version }} \
+            -t ghcr.io/janbjorge/pgcachewatchtestdb${{ matrix.postgres-version }}:latest \
+            tests/db/
+          docker push ghcr.io/janbjorge/pgcachewatchtestdb${{ matrix.postgres-version }}:latest
+
   ci:
+    needs: build-and-push
+    services:
+      postgres:
+        image: ghcr.io/janbjorge/pgcachewatchtestdb${{ matrix.postgres-version }}:latest
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
         postgres-version: ["14", "15", "16"]
-        os: [ubuntu-latest]
+        # os: ["ubuntu-latest"]
+        os: ["ubuntu-latest", "windows-latest"]
+        # os: ["ubuntu-latest", "windows-latest", "macos-latest"]
 
     name: PY ${{ matrix.python-version }} on ${{ matrix.os }} using PG ${{ matrix.postgres-version }}
     runs-on: ${{ matrix.os }}
@@ -26,34 +68,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Build custom PostgreSQL Docker image
-        run: |
-          docker build \
-            --build-arg POSTGRES_VERSION=${{ matrix.postgres-version }} \
-            -t custom-postgres:latest tests/db/
-        env:
-          POSTGRES_VERSION: ${{ matrix.postgres-version }}
-
-      - name: Start PostgreSQL container
-        run: |
-          docker run -d --network host --name postgres custom-postgres:latest
-
       - name: Install pgcachewatch
+        shell: bash
         run: |
           pip install pip -U
           pip install .[dev]
 
-      - name: Wait for PostgreSQL to become ready
-        run: |
-          for i in {1..10}; do
-            docker exec postgres pg_isready && break
-            sleep 5
-          done
-
-      - name: Check PostgreSQL Container Logs
-        run: docker logs postgres
-
       - name: Full test
+        shell: bash
         run: pytest -v
 
   check:
