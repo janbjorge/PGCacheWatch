@@ -38,8 +38,11 @@ async def app_setup_teardown(_: FastAPI) -> typing.AsyncGenerator[None, None]:
     conn = await asyncpg.connect()
     # Connect the listener to the database using the specified channel.
     await listener.connect(conn)
-    yield  # Yield control back to the event loop.
-    await conn.close()  # Ensure the database connection is closed on app teardown.
+
+    try:
+        yield
+    finally:
+        await conn.close()  # Ensure the database connection is closed on app teardown.
 
 # Create an instance of FastAPI, specifying the app setup and teardown actions.
 APP = FastAPI(lifespan=app_setup_teardown)
