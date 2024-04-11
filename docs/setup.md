@@ -24,7 +24,7 @@ The PGCacheWatch CLI simplifies the process of setting up and managing the neces
 Sets up triggers and functions on specified tables to emit NOTIFY signals. This is crucial for initializing PGCacheWatch's event listening capabilities.
 
 ```bash
-pgcachewatch install <table_name(s)>
+python3 -m pgcachewatch install <table_name(s)>
 ```
 `<table_name(s)>`: Specify one or more table names to set up NOTIFY triggers. The CLI will generate and execute the SQL necessary to create these database objects.
 
@@ -32,7 +32,7 @@ pgcachewatch install <table_name(s)>
 Removes the triggers and functions created by the install command, cleaning up the database objects associated with PGCacheWatch.
 
 ```bash
-pgcachewatch uninstall
+python3 -m pgcachewatch uninstall
 ```
 
 ### Best Practices
