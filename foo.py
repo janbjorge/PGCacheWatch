@@ -20,100 +20,96 @@ class Header:
 
 @dataclass
 class AuthenticationOk:
-    header: Header
     auth_code: int
 
     @staticmethod
-    def from_bytes(raw: bytes, header: Header) -> "AuthenticationOk":
+    def from_bytes(raw: bytes) -> "AuthenticationOk":
         *_, auth_code = struct.unpack("!cII", raw)
-        return AuthenticationOk(
-            header=header,
-            auth_code=auth_code,
-        )
+        return AuthenticationOk(auth_code=auth_code)
 
 
 @dataclass
 class BackendKeyData:
-    header: Header
     process_id: int
     secret_key: int
 
     @staticmethod
-    def from_bytes(raw: bytes, header: Header) -> "BackendKeyData":
+    def from_bytes(raw: bytes) -> "BackendKeyData":
         *_, pid, key = struct.unpack("!cIII", raw)
-        return BackendKeyData(header=header, process_id=pid, secret_key=key)
+        return BackendKeyData(process_id=pid, secret_key=key)
 
 
 @dataclass
 class ParameterStatus:
-    header: Header
     name: str
     value: str
 
     @staticmethod
-    def from_bytes(raw: bytes, header: Header) -> "ParameterStatus":
-        strings_data = raw[5:]
-        null_index = strings_data.find(b"\x00")
-        if null_index == -1:
-            raise ValueError("Parameter name is not null-terminated.")
-
-        # Extract parameter name
-        param_name = strings_data[:null_index].decode("utf-8")
-
-        # Remove the parameter name and the null byte from the strings_data
-        strings_data = strings_data[null_index + 1 :]
-
-        # Find the next null byte for the parameter value
-        null_index = strings_data.find(b"\x00")
-        if null_index == -1:
-            raise ValueError("Parameter value is not null-terminated.")
-
-        # Extract parameter value
-        param_value = strings_data[:null_index].decode("utf-8")
-
+    def from_bytes(raw: bytes) -> "ParameterStatus":
+        # Skip header first 5, ignore null termination.
+        name, value = raw[5:-1].split(b"\x00", maxsplit=2)
         return ParameterStatus(
-            header=header,
-            name=param_name,
-            value=param_value,
+            name=name.decode(),
+            value=value.decode(),
         )
 
 
 @dataclass
 class ReadyForQuery:
-    header: Header
     status: str
 
     @staticmethod
-    def from_bytes(raw: bytes, header: Header) -> "ReadyForQuery":
+    def from_bytes(raw: bytes) -> "ReadyForQuery":
         *_, status = struct.unpack("!cIc", raw)
-        return ReadyForQuery(header=header, status=status.decode())
-
-
-@dataclass
-class CopyBothResponse:
-    header: Header
-    copy_format: int
-    num_columns: int
-    column_formats: list[int]
-
-    @staticmethod
-    def from_bytes(raw: bytes, header: Header) -> "CopyBothResponse":
-        return CopyBothResponse(
-            header=header,
-            copy_format=1,
-            num_columns=0,
-            column_formats=[],
-        )
+        return ReadyForQuery(status=status.decode())
 
 
 @dataclass
 class CopyData:
-    header: Header
     data: bytes
 
     @staticmethod
-    def from_bytes(raw: bytes, header: Header) -> "CopyData":
-        return CopyData(header=header, data=raw[5:])
+    def from_bytes(raw: bytes) -> "CopyData":
+        return CopyData(data=raw[5:])
+
+
+@dataclass
+class XLogData:
+    type: str
+    start: int
+    stop: int
+    clock: int
+    data: bytes
+
+    @staticmethod
+    def from_bytes(raw: bytes) -> "XLogData":
+        cqqq_len = 1 + 3 * 8
+        type, start, stop, clock = struct.unpack("!cqqq", raw[:cqqq_len])
+        return XLogData(
+            type=type.decode(),
+            start=start,
+            stop=stop,
+            clock=clock,
+            data=raw[cqqq_len:],
+        )
+
+
+@dataclass
+class PrimaryKeepaliveMessage:
+    type: str
+    wal_end: int
+    clock: int
+    high_urgency: int
+
+    @staticmethod
+    def from_bytes(raw: bytes) -> "PrimaryKeepaliveMessage":
+        type, wal_end, clock, high_urgency = struct.unpack("!cqqb", raw)
+        return PrimaryKeepaliveMessage(
+            type=type,
+            wal_end=wal_end,
+            clock=clock,
+            high_urgency=high_urgency,
+        )
 
 
 def sequence_split_at(seq: bytes, idx: int) -> tuple[bytes, bytes]:
@@ -127,21 +123,19 @@ def parse(sequence: bytes) -> Generator:
         header = Header.from_bytes(sequence)
         to_parse, sequence = sequence_split_at(sequence, header.length + 1)
 
-        print(header)
-
         match header.type:
             case "R":
-                yield AuthenticationOk.from_bytes(to_parse, header)
+                yield AuthenticationOk.from_bytes(to_parse)
             case "S":
-                yield ParameterStatus.from_bytes(to_parse, header)
+                yield ParameterStatus.from_bytes(to_parse)
             case "K":
-                yield BackendKeyData.from_bytes(to_parse, header)
+                yield BackendKeyData.from_bytes(to_parse)
             case "Z":
-                yield ReadyForQuery.from_bytes(to_parse, header)
+                yield ReadyForQuery.from_bytes(to_parse)
             case "W":
-                yield CopyBothResponse.from_bytes(to_parse, header)
+                ...
             case "d":
-                yield CopyData.from_bytes(to_parse, header)
+                yield CopyData.from_bytes(to_parse)
             case _:
                 raise NotImplementedError(header)
 
@@ -198,15 +192,16 @@ def connect(s: socket.socket) -> None:
         print(x)
 
     print("Enter while loop.")
-    buffer = bytearray()
     while True:
         if recved := s.recv(2**20):
-            print("---->", recved)
+            # print("---->", recved)
             for x in parse(recved):
                 if isinstance(x, CopyData):
-                    print(x)
-
-                    print("-" * 100)
+                    mtype = chr(x.data[0])
+                    if mtype == "k":
+                        print(PrimaryKeepaliveMessage.from_bytes(x.data))
+                    else:
+                        print(XLogData.from_bytes(x.data))
 
 
 def main() -> None:
