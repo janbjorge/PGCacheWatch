@@ -1,5 +1,6 @@
 ARG POSTGRES_VERSION
 FROM postgres:${POSTGRES_VERSION}
+RUN apt-get update && apt-get install -y postgresql-16-wal2json
 ENV POSTGRES_USER=testuser
 ENV POSTGRES_PASSWORD=testpassword
 # ENV POSTGRES_HOST_AUTH_METHOD=trust
