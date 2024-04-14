@@ -112,6 +112,38 @@ class PrimaryKeepaliveMessage:
         )
 
 
+def create_standby_status_update(
+    wal_receive_lsn: int,
+    wal_flush_lsn: int,
+    wal_apply_lsn: int,
+    wal_time: int,
+    reply_requested: int = 0,
+) -> bytes:
+    # Define the message type for a Standby Status Update
+    message_type = b"r"
+
+    # Pack the data into a binary format
+    # '!cQQQQB' stands for:
+    # - '!': network byte order (big-endian)
+    # - 'c': char (1 byte) for the message type
+    # - 'Q': unsigned long long (8 bytes) for each WAL location and the timestamp
+    # - 'B': unsigned char (1 byte) for the reply request flag
+    packet_format = "!cQQQQB"
+    return struct.pack(
+        packet_format,
+        message_type,
+        wal_receive_lsn,
+        wal_flush_lsn,
+        wal_apply_lsn,
+        wal_time,
+        reply_requested,
+    )
+
+
+def create_copy_data(data: bytes) -> bytes:
+    return b"d" + bytearray((len(data) + 4).to_bytes(4, "big")) + data
+
+
 def sequence_split_at(seq: bytes, idx: int) -> tuple[bytes, bytes]:
     left = seq[:idx]
     right = seq[idx:]
@@ -193,15 +225,27 @@ def connect(s: socket.socket) -> None:
 
     print("Enter while loop.")
     while True:
-        if recved := s.recv(2**20):
-            # print("---->", recved)
+        if recved := s.recv(4096):
             for x in parse(recved):
                 if isinstance(x, CopyData):
-                    mtype = chr(x.data[0])
-                    if mtype == "k":
-                        print(PrimaryKeepaliveMessage.from_bytes(x.data))
-                    else:
-                        print(XLogData.from_bytes(x.data))
+                    match chr(x.data[0]):
+                        case "k":
+                            pkam = PrimaryKeepaliveMessage.from_bytes(x.data)
+                            print(pkam)
+                            s.sendall(
+                                create_copy_data(
+                                    create_standby_status_update(
+                                        pkam.wal_end + 1,
+                                        pkam.wal_end + 1,
+                                        pkam.wal_end + 1,
+                                        pkam.clock,
+                                    )
+                                )
+                            )
+                        case "w":
+                            print(XLogData.from_bytes(x.data))
+                        case _:
+                            raise NotImplementedError(x)
 
 
 def main() -> None:
